@@ -13,39 +13,56 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
     }
 
     #ar-container {
-      height: 50vh; /* Half screen height */
+      height: 50vh; /* Top half of screen */
       width: 100%;
       position: relative;
+      background: black;
     }
 
-    a-scene {
-      height: 100% !important;
-      width: 100% !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 0;
+    #ui-panel {
+      height: 50vh; /* Bottom half of screen */
+      width: 100%;
+      background-color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
     #instructions {
       position: absolute;
       top: 10px;
       left: 10px;
+      background: rgba(0,0,0,0.6);
       color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
       z-index: 2;
-      font-size: 18px;
-      font-family: sans-serif;
+    }
+
+    a-scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100% !important;
+      width: 100% !important;
+      z-index: 0;
     }
   </style>
 </head>
 <body>
-  <div id="instructions">Point your camera at the marker.</div>
 
-  <!-- Container to constrain the AR camera -->
   <div id="ar-container">
+    <div id="instructions">📱 Point your camera at the <strong>Hiro</strong> marker</div>
     <a-scene embedded arjs>
       <a-marker preset="hiro">
         <a-entity
@@ -55,19 +72,26 @@
           position="0 0 0">
         </a-entity>
       </a-marker>
+      <a-entity light="type: directional; intensity: 1" position="1 1 1"></a-entity>
+      <a-entity light="type: ambient; intensity: 0.5"></a-entity>
       <a-entity camera></a-entity>
     </a-scene>
+  </div>
+
+  <div id="ui-panel">
+    <h2>Welcome to AR Mode</h2>
+    <p>You can use this area for controls, instructions, or additional info.</p>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const modelUrl = urlParams.get('url');
-
     const model = document.getElementById('model');
-    if (modelUrl) {
+
+    if (modelUrl && (modelUrl.endsWith('.glb') || modelUrl.endsWith('.gltf'))) {
       model.setAttribute('gltf-model', `url(${modelUrl})`);
     } else {
-      console.warn('No model URL found in query string');
+      console.warn('⚠️ No valid model URL found. Use ?url=your_model_url.glb');
     }
   </script>
 </body>
