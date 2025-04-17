@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Viewer</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body { margin: 0; }
+        #instructions { position: absolute; top: 10px; left: 10px; color: white; }
+    </style>
+</head>
+<body>
+    <div id="instructions">Point your camera at the marker.</div>
+    <a-scene embedded arjs>
+        <a-marker preset="hiro">
+            <a-entity 
+                gltf-model="url(YOUR_MODEL_URL_HERE)" 
+                scale="0.1 0.1 0.1" 
+                position="0 0 0">
+            </a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Get the model URL from the query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelUrl = urlParams.get('url');
+        const modelEntity = document.querySelector('a-entity[gltf-model]');
+        
+        // Set the model URL dynamically
+        if (modelUrl) {
+            modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+        } else {
+            console.error('No model URL provided.');
+        }
+    </script>
+</body>
+</html>
