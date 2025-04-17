@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Mobile AR Viewer</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
@@ -14,19 +14,27 @@
       width: 100%;
       overflow: hidden;
       font-family: sans-serif;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-text-size-adjust: none;
+      touch-action: none;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
     }
 
     #ar-container {
-      height: 50vh; /* Top half of screen */
+      height: 50vh;
       width: 100%;
       position: relative;
       background: black;
+      overflow: hidden;
     }
 
     #ui-panel {
-      height: 50vh; /* Bottom half of screen */
+      height: 50vh;
       width: 100%;
       background-color: white;
       padding: 20px;
@@ -35,6 +43,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
+      flex-direction: column;
     }
 
     #instructions {
@@ -56,6 +65,13 @@
       height: 100% !important;
       width: 100% !important;
       z-index: 0;
+      touch-action: none;
+      pointer-events: none; /* Prevent gestures */
+    }
+
+    canvas {
+      touch-action: none !important;
+      pointer-events: none !important;
     }
   </style>
 </head>
@@ -63,7 +79,7 @@
 
   <div id="ar-container">
     <div id="instructions">📱 Point your camera at the <strong>Hiro</strong> marker</div>
-    <a-scene embedded arjs>
+    <a-scene embedded arjs vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;" gesture-detector="enabled: false">
       <a-marker preset="hiro">
         <a-entity
           id="model"
@@ -79,8 +95,8 @@
   </div>
 
   <div id="ui-panel">
-    <h2>Welcome to AR Mode</h2>
-    <p>You can use this area for controls, instructions, or additional info.</p>
+    <h2>Welcome to AR</h2>
+    <p>This panel is fully customizable.</p>
   </div>
 
   <script>
