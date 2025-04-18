@@ -40,22 +40,11 @@
       font-family: sans-serif;
       z-index: 10;
     }
-
-    #image {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 300px;
-      border: 2px solid white;
-      border-radius: 10px;
-      z-index: 10;
-    }
   </style>
 </head>
 <body>
-  <!-- Instructions and optional reference image -->
+  <!-- Instructions -->
   <div id="instructions">📸 Point your camera at the marker.</div>
-  <!-- <img id="image" src="YOUR_IMAGE_URL_HERE" alt="AR Example Image" /> -->
 
   <!-- AR Scene -->
   <a-scene
@@ -67,7 +56,7 @@
     <a-marker preset="hiro">
       <a-entity
         id="model"
-        gltf-model="url(dummy.gltf)"  <!-- Will be replaced dynamically -->
+        gltf-model="url(dummy.gltf)" <!-- Default model to load -->
         scale="0.1 0.1 0.1"
         position="0 0 0">
       </a-entity>
