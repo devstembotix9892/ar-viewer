@@ -5,11 +5,11 @@
   <title>AR Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
-  <!-- A-Frame + AR.js -->
+  <!-- A-Frame and AR.js -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-  <!-- Style for fullscreen AR -->
+  <!-- Styles -->
   <style>
     html, body {
       margin: 0;
@@ -39,22 +39,16 @@
       font-size: 16px;
       font-family: sans-serif;
       z-index: 10;
-    }
-
-    #image {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 300px;
-      border: 2px solid white;
-      border-radius: 10px;
-      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 8px 12px;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
-  <!-- Instructions and optional reference image -->
-  <div id="instructions">📸 Point your camera at the marker.</div>
+
+  <!-- Instructions -->
+  <div id="instructions">📸 Point your camera at the marker to see your 3D model.</div>
 
   <!-- AR Scene -->
   <a-scene
@@ -63,10 +57,10 @@
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
-    <a-marker preset="hiro">
+    <a-marker preset="hiro" id="hiro-marker">
       <a-entity
         id="model"
-        gltf-model="url(dummy.gltf)"  <!-- Will be replaced dynamically -->
+        gltf-model=""
         scale="0.1 0.1 0.1"
         position="0 0 0">
       </a-entity>
@@ -74,18 +68,27 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-  <!-- Dynamic model loading -->
+  <!-- Dynamic Model Loader -->
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const modelUrl = urlParams.get('url');
-    const modelEntity = document.getElementById('model');
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelUrl = urlParams.get('url');
 
-    if (modelUrl) {
-      console.log('Model URL:', modelUrl); // Debugging line
-      modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-    } else {
-      console.warn('No model URL provided in the query string.');
-    }
+      if (!modelUrl) {
+        console.warn('No model URL provided in the query string.');
+        return;
+      }
+
+      const modelEntity = document.getElementById('model');
+
+      // Set gltf-model attribute with forced reload
+      modelEntity.removeAttribute('gltf-model'); // Reset any previous model
+      setTimeout(() => {
+        modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+        console.log('Model loaded from URL:', modelUrl);
+      }, 100); // Timeout ensures attribute is reset properly
+    });
   </script>
+
 </body>
 </html>
