@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>AR Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
-  <!-- A-Frame + AR.js -->
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <title>WebAR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Style for fullscreen AR -->
+  <!-- A-Frame and AR.js -->
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/master/aframe/build/aframe-ar.js"></script>
+
   <style>
-    html, body {
+    body, html {
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -19,61 +18,44 @@
       height: 100%;
     }
 
-    a-scene {
-      width: 100vw;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-    }
-
-    video, canvas {
-      object-fit: cover !important;
-    }
-
     #instructions {
       position: absolute;
       top: 10px;
       left: 10px;
-      color: white;
-      font-size: 16px;
-      font-family: sans-serif;
       z-index: 10;
+      color: white;
+      font-family: sans-serif;
     }
   </style>
 </head>
 <body>
-  <!-- Instructions -->
-  <div id="instructions">📸 Point your camera at the marker.</div>
+  <div id="instructions">📸 Scan the HIRO marker with your camera</div>
 
-  <!-- AR Scene -->
   <a-scene
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true;"
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false;"
-  >
+    renderer="logarithmicDepthBuffer: true;">
+    
     <a-marker preset="hiro">
       <a-entity
         id="model"
-        gltf-model="url(dummy.gltf)" <!-- Default model to load -->
+        position="0 0 0"
         scale="0.1 0.1 0.1"
-        position="0 0 0">
+        crossorigin="anonymous">
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
 
-  <!-- Dynamic model loading -->
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const modelUrl = urlParams.get('url');
-    const modelEntity = document.getElementById('model');
+    const modelUrl = new URLSearchParams(window.location.search).get('url');
+    console.log('Loading model from:', modelUrl);
 
     if (modelUrl) {
-      modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+      document.getElementById('model').setAttribute('gltf-model', modelUrl);
     } else {
-      console.warn('No model URL provided in the query string.');
+      alert('No model URL provided.');
     }
   </script>
 </body>
