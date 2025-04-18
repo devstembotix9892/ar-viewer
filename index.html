@@ -40,10 +40,20 @@
       font-family: sans-serif;
       z-index: 10;
     }
+
+    #image {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      border: 2px solid white;
+      border-radius: 10px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
-  <!-- Instructions -->
+  <!-- Instructions and optional reference image -->
   <div id="instructions">📸 Point your camera at the marker.</div>
 
   <!-- AR Scene -->
@@ -56,9 +66,9 @@
     <a-marker preset="hiro">
       <a-entity
         id="model"
+        gltf-model="url(dummy.gltf)"  <!-- Will be replaced dynamically -->
         scale="0.1 0.1 0.1"
-        position="0 0 0"
-        crossorigin="anonymous">
+        position="0 0 0">
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
@@ -66,22 +76,15 @@
 
   <!-- Dynamic model loading -->
   <script>
-    // const urlParams = new URLSearchParams(window.location.search);
-    // const modelUrl = urlParams.get('url');
-    const modelUrl = new URLSearchParams(window.location.search).get('url');
-   
-    console.log('Model URL:', modelUrl); // Add this line for debugging
+    const urlParams = new URLSearchParams(window.location.search);
+    const modelUrl = urlParams.get('url');
     const modelEntity = document.getElementById('model');
 
-    // if (modelUrl) {
-    //   modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-    // } else {
-    //   console.warn('No model URL provided in the query string.');
-    // }
     if (modelUrl) {
-      document.getElementById('model').setAttribute('gltf-model', modelUrl);
+      console.log('Model URL:', modelUrl); // Debugging line
+      modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
     } else {
-      alert('No model URL provided.');
+      console.warn('No model URL provided in the query string.');
     }
   </script>
 </body>
