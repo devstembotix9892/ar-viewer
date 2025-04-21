@@ -51,12 +51,12 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
           const urlParams = new URLSearchParams(window.location.search);
-          const modelUrl = urlParams.get('url');
-          const modelEntity = document.getElementById('model');
+          const modelID = urlParams.get('modelID');
+          const modelEntity = document.getElementById('modelID');
       
           if (modelUrl) {
-            modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-            console.log('Loaded model:', modelUrl);
+            modelEntity.setAttribute('gltf-model', `url(${modelID})`);
+            console.log('Loaded model:', modelID);
           } else {
             alert('No model URL provided.');
           }
