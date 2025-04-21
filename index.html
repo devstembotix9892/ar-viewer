@@ -30,7 +30,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const modelUrl = urlParams.get('"https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"');
+            const modelUrl = urlParams.get('url');
 
             if (!modelUrl) {
                 console .warn('No model URL provided in the query string.');
@@ -45,7 +45,7 @@
             setTimeout(() => {
                 modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
                 console.log('Model loaded from URL:', modelUrl);
-            }, 10000);
+            }, 500);
         });
     </script>
 </body>
