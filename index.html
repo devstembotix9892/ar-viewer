@@ -30,7 +30,9 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const modelUrl = urlParams.get('url');
+            // const modelUrl = urlParams.get('url');
+            const modelUrl = urlParams.get('url') + `?t=${Date.now()}`; // Cache-busting
+
 
             if (!modelUrl) {
                 console .warn('No model URL provided in the query string.');
