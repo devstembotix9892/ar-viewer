@@ -49,18 +49,36 @@
         });
     </script> -->
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
+      function resetScene() {
+          const scene = document.querySelector('a-scene');
+          scene.removeAttribute('arjs');  // Remove AR.js attributes to reset the scene
+          scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');  // Re-initialize AR.js
+      }
+  
+      window.addEventListener('DOMContentLoaded', () => {
           const urlParams = new URLSearchParams(window.location.search);
-          const modelID = urlParams.get('modelID');
-          const modelEntity = document.getElementById('modelID');
-      
-          if (modelUrl) {
-            modelEntity.setAttribute('gltf-model', `url(${modelID})`);
-            console.log('Loaded model:', modelID);
-          } else {
-            alert('No model URL provided.');
+          const modelUrl = urlParams.get('url');  // Get the model URL from the query string
+  
+          if (!modelUrl) {
+              console.warn('No model URL provided in the query string.');
+              return;
           }
-        });
-      </script>
+  
+          const modelEntity = document.getElementById('model');
+  
+          // Reset the AR scene before loading the new model
+          modelEntity.removeAttribute('gltf-model');  // Remove any previously loaded model
+  
+          resetScene();  // Reset the AR scene
+  
+          // After resetting the scene, load the new model
+          setTimeout(() => {
+              modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);  // Load the new model
+              modelEntity.setAttribute('scale', '0.1 0.1 0.1'); // Adjust scale if necessary
+              console.log('Model loaded from URL:', modelUrl);
+          }, 1000);  // Allow some time for resetting the scene before loading the model
+      });
+  </script>
+  
       </body>
 </html>
