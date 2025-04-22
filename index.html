@@ -1,50 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>AR Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
-    a-scene { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
-    #instructions {
-      position: absolute; top: 10px; left: 10px; z-index: 10;
-      color: white; font-family: sans-serif; font-size: 16px;
-      background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <title>AR Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
+        a-scene { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+        #instructions {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            color: white; font-family: sans-serif; font-size: 16px;
+            background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px;
+        }
+    </style>
 </head>
 <body>
-  <div id="instructions">📸 Point your camera at the marker to view the model</div>
-  
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <a-marker preset="hiro" id="hiro-marker">
-      <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0" visible="false"></a-entity>
-    </a-marker>
-    <a-entity camera></a-entity>
-  </a-scene>
+    <!-- Instructions to the user -->
+    <div id="instructions">📸 Point your camera at the marker to view the model</div>
+    
+    <!-- A-Frame Scene for AR -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <!-- Marker with the id "hiro-marker" -->
+        <a-marker preset="hiro" id="hiro-marker">
+            <!-- Model Entity (Initially hidden) -->
+            <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0" visible="false"></a-entity>
+        </a-marker>
 
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('Page loaded. Waiting for model URL...');
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const modelUrl = urlParams.get('url');
+        <!-- Camera Entity for the Scene -->
+        <a-entity camera></a-entity>
+    </a-scene>
 
-      if (!modelUrl) {
-        console.warn('No model URL provided.');
-        return;
-      }
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded. Waiting for model URL...');
+            
+            // Get the model URL from the URL query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const modelUrl = urlParams.get('url');
 
-      console.log('Model URL retrieved:', modelUrl);
+            if (!modelUrl) {
+                console.warn('No model URL provided.');
+                return;
+            }
 
-      const modelEntity = document.getElementById('model');
-      modelEntity.setAttribute('gltf-model', modelUrl); // Set the model URL directly
-      modelEntity.setAttribute('visible', 'true');
-      console.log('Model loaded and visible:', modelUrl);
-    });
-  </script>
+            console.log('Model URL retrieved:', modelUrl);
+
+            // Get the model entity
+            const modelEntity = document.getElementById('model');
+            
+            // Set the model URL for the entity
+            modelEntity.setAttribute('gltf-model', modelUrl);
+            
+            // Make the model visible when the marker is detected
+            modelEntity.setAttribute('visible', 'true');
+            console.log('Model loaded and visible:', modelUrl);
+        });
+    </script>
 </body>
 </html>
