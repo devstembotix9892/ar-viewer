@@ -17,18 +17,12 @@
   </style>
 </head>
 <body>
-  <!-- Instructions to the user -->
   <div id="instructions">📸 Point your camera at the marker to view the model</div>
   
-  <!-- A-Frame Scene for AR -->
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <!-- Marker with the id "hiro-marker" -->
     <a-marker preset="hiro" id="hiro-marker">
-      <!-- Model Entity (Initially hidden) -->
       <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0" visible="false"></a-entity>
     </a-marker>
-
-    <!-- Camera Entity for the Scene -->
     <a-entity camera></a-entity>
   </a-scene>
 
@@ -36,7 +30,6 @@
     window.addEventListener('DOMContentLoaded', () => {
       console.log('Page loaded. Waiting for model URL...');
       
-      // Get the model URL from the URL query parameters
       const urlParams = new URLSearchParams(window.location.search);
       const modelUrl = urlParams.get('url');
 
@@ -47,13 +40,8 @@
 
       console.log('Model URL retrieved:', modelUrl);
 
-      // Get the model entity
       const modelEntity = document.getElementById('model');
-      
-      // Set the model URL for the entity
-      modelEntity.setAttribute('gltf-model', modelUrl);
-      
-      // Make the model visible when the marker is detected
+      modelEntity.setAttribute('gltf-model', modelUrl); // Set the model URL directly
       modelEntity.setAttribute('visible', 'true');
       console.log('Model loaded and visible:', modelUrl);
     });
