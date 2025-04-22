@@ -33,30 +33,36 @@
     </a-scene>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            console.log('Page loaded. Waiting for model URL...');
-            
-            // Get the model URL from the URL query parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const modelUrl = urlParams.get('url');
-
-            if (!modelUrl) {
-                console.warn('No model URL provided.');
-                return;
-            }
-
-            console.log('Model URL retrieved:', modelUrl);
-
-            // Get the model entity
-            const modelEntity = document.getElementById('model');
-            
-            // Set the model URL for the entity
-            modelEntity.setAttribute('gltf-model', modelUrl);
-            
-            // Make the model visible when the marker is detected
-            modelEntity.setAttribute('visible', 'true');
-            console.log('Model loaded and visible:', modelUrl);
-        });
-    </script>
+      window.addEventListener('DOMContentLoaded', () => {
+          console.log('Page loaded. Waiting for model URL...');
+          
+          // Get the model URL from the URL query parameters
+          const urlParams = new URLSearchParams(window.location.search);
+          const modelUrl = urlParams.get('url');
+  
+          if (!modelUrl) {
+              console.warn('No model URL provided.');
+              return;
+          }
+  
+          console.log('Model URL retrieved:', modelUrl);
+  
+          // Check if the URL is base64
+          if (modelUrl.startsWith('data:model/gltf-binary;base64,')) {
+              // If base64, directly load the base64 data into the model entity
+              const modelEntity = document.getElementById('model');
+              modelEntity.setAttribute('gltf-model', modelUrl);
+              modelEntity.setAttribute('visible', 'true');
+              console.log('Model loaded from base64 URL:', modelUrl);
+          } else {
+              // Fallback to using the URL if it's a direct URL to a file
+              const modelEntity = document.getElementById('model');
+              modelEntity.setAttribute('gltf-model', modelUrl);
+              modelEntity.setAttribute('visible', 'true');
+              console.log('Model loaded from URL:', modelUrl);
+          }
+      });
+  </script>
+  
 </body>
 </html>
