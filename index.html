@@ -7,6 +7,8 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
     <style>
         html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 50%; }
         a-scene { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
@@ -75,7 +77,8 @@
           setTimeout(() => {
               modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);  // Load the new model
               modelEntity.setAttribute('scale', '0.1 0.1 0.1'); // Adjust scale if necessary
-              console.log('Model loaded from URL:', modelUrl);
+              modelEntity.setAttribute('visible', 'true');
+               console.log('Model loaded from URL:', modelUrl);
           }, 1000);  // Allow some time for resetting the scene before loading the model
       });
   </script>
