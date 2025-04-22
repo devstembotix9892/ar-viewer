@@ -27,6 +27,8 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded. Waiting for model URL...');
+      
       const urlParams = new URLSearchParams(window.location.search);
       const modelUrl = urlParams.get('url');
 
@@ -35,10 +37,12 @@
         return;
       }
 
+      console.log('Model URL retrieved:', modelUrl);
+
       const modelEntity = document.getElementById('model');
       modelEntity.setAttribute('gltf-model', modelUrl);
       modelEntity.setAttribute('visible', 'true');
-      console.log('Model loaded from URL:', modelUrl);
+      console.log('Model loaded and visible:', modelUrl);
     });
   </script>
 </body>
