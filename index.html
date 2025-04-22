@@ -1,87 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AR Viewer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
-    <style>
-        html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 50%; }
-        a-scene { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
-        #instructions { position: absolute; top: 10px; left: 10px; color: white; font-size: 16px; font-family: sans-serif; z-index: 10; background-color: rgba(0, 0, 0, 0.5); padding: 8px 12px; border-radius: 6px; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>AR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    a-scene {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+      font-family: sans-serif;
+      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-    <div id="instructions">📸 Point your camera at the marker to see your 3D model.</div>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        <a-marker preset="hiro" id="hiro-marker">
-          <a-entity id="model" gltf-model="" scale="0.1 0.1 0.1" position="0 0 0"></a-entity>
-        </a-marker>
-        <a-entity camera></a-entity>
-      </a-scene>
-    <!-- <script>
-        function resetScene() {
-            const scene = document.querySelector('a-scene');
-            scene.removeAttribute('arjs');
-            scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
-        }
+  <div id="instructions">📸 Point your camera at the marker to see your 3D model.</div>
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const modelUrl = urlParams.get('url');
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-marker preset="hiro" id="hiro-marker">
+      <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0" visible="false"></a-entity>
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
 
-            if (!modelUrl) {
-                console .warn('No model URL provided in the query string.');
-                return;
-            }
+  <script>
+    function resetScene() {
+      const scene = document.querySelector('a-scene');
+      scene.removeAttribute('arjs');
+      scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
+    }
 
-            const modelEntity = document.getElementById('model');
-            modelEntity.removeAttribute('gltf-model');
-            modelEntity.setAttribute('animation', 'property: scale; to: 0.1,0.1,0.1; loop: false');
-            resetScene();
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelUrl = urlParams.get('url'); // Should be a data URL (Base64)
 
-            setTimeout(() => {
-                modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-                console.log('Model loaded from URL:', modelUrl);
-            }, 500);
-        });
-    </script> -->
-    <script>
-      function resetScene() {
-          const scene = document.querySelector('a-scene');
-          scene.removeAttribute('arjs');  // Remove AR.js attributes to reset the scene
-          scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');  // Re-initialize AR.js
+      if (!modelUrl) {
+        console.warn('No model URL provided in the query string.');
+        return;
       }
-  
-      window.addEventListener('DOMContentLoaded', () => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const modelUrl = urlParams.get('url');  // Get the model URL from the query string
-  
-          if (!modelUrl) {
-              console.warn('No model URL provided in the query string.');
-              return;
-          }
-  
-          const modelEntity = document.getElementById('model');
-  
-          // Reset the AR scene before loading the new model
-          modelEntity.removeAttribute('gltf-model');  // Remove any previously loaded model
-  
-          resetScene();  // Reset the AR scene
-  
-          // After resetting the scene, load the new model
-          setTimeout(() => {
-              modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);  // Load the new model
-              modelEntity.setAttribute('scale', '0.1 0.1 0.1'); // Adjust scale if necessary
-              modelEntity.setAttribute('visible', 'true');
-               console.log('Model loaded from URL:', modelUrl);
-          }, 1000);  // Allow some time for resetting the scene before loading the model
-      });
+
+      const modelEntity = document.getElementById('model');
+
+      // Reset scene and reload model
+      modelEntity.removeAttribute('gltf-model');
+      resetScene();
+
+      setTimeout(() => {
+        modelEntity.setAttribute('gltf-model', modelUrl); // ✅ Don't wrap in `url(...)`
+        modelEntity.setAttribute('scale', '0.1 0.1 0.1');
+        modelEntity.setAttribute('visible', 'true');
+        console.log('Model loaded from URL:', modelUrl);
+      }, 1000);
+    });
   </script>
-  
-      </body>
+</body>
 </html>
