@@ -34,19 +34,29 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const modelUrl = urlParams.get('url');
+      console.log('Page loaded. Waiting for model URL...');
+      
+      // Get the model URL from the URL query parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelUrl = urlParams.get('url');
 
-  if (!modelUrl) {
-    console.warn('No model URL provided.');
-    return;
-  }
+      if (!modelUrl) {
+        console.warn('No model URL provided.');
+        return;
+      }
 
-  const modelEntity = document.getElementById('model');
-  modelEntity.setAttribute('gltf-model', modelUrl); // ✅ Pass as string
-  modelEntity.setAttribute('visible', 'true');
-});
+      console.log('Model URL retrieved:', modelUrl);
 
+      // Get the model entity
+      const modelEntity = document.getElementById('model');
+      
+      // Set the model URL for the entity
+      modelEntity.setAttribute('gltf-model', modelUrl);
+      
+      // Make the model visible when the marker is detected
+      modelEntity.setAttribute('visible', 'true');
+      console.log('Model loaded and visible:', modelUrl);
+    });
   </script>
 </body>
 </html>
