@@ -1,113 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>AR Viewer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-      html, body {
-          margin: 0;
-          padding: 0;
-          overflow: hidden;
-          width: 100%;
-          height: 100%;
-          font-family: sans-serif;
-      }
-  
-      a-scene {
-          width: 100vw;
-          height: 100vh;
-          position: fixed;
-          top: 0;
-          left: 0;
-      }
-  
-      #instructions {
-          position: absolute;
-          z-index: 10;
-          background: rgba(0, 0, 0, 0.5);
-          padding: 8px 12px;
-          border-radius: 6px;
-          color: white;
-      }
-  
-      /* Desktop view (laptop, tablets in landscape, etc.) */
-      @media screen and (min-width: 768px) {
-          #instructions {
-              top: 20px;
-              left: 20px;
-              font-size: 18px;
-              max-width: 300px;
-          }
-      }
-  
-      /* Mobile view */
-      @media screen and (max-width: 767px) {
-          #instructions {
-              top: 10px;
-              left: 10px;
-              font-size: 14px;
-              max-width: 80%;
-          }
-  
-          a-scene {
-              height: 100vh;
-          }
-      }
-  </style>
-  
+        html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
+        a-scene { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+        #instructions { position: absolute; top: 10px; left: 10px; color: white; font-size: 16px; font-family: sans-serif; z-index: 10; background-color: rgba(0, 0, 0, 0.5); padding: 8px 12px; border-radius: 6px; }
+    </style>
 </head>
 <body>
-    <!-- Instructions to the user -->
-    <div id="instructions">📸 Point your camera at the marker to view the model</div>
-    
-    <!-- A-Frame Scene for AR -->
+    <div id="instructions">📸 Point your camera at the marker to see your 3D model.</div>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        <!-- Marker with the id "hiro-marker" -->
         <a-marker preset="hiro" id="hiro-marker">
-            <!-- Model Entity (Initially hidden) -->
-            <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0" visible="false"></a-entity>
+          <a-entity id="model" gltf-model="" scale="0.1 0.1 0.1" position="0 0 0"></a-entity>
         </a-marker>
-
-        <!-- Camera Entity for the Scene -->
         <a-entity camera></a-entity>
-    </a-scene>
+      </a-scene>
+    <!-- <script>
+        function resetScene() {
+            const scene = document.querySelector('a-scene');
+            scene.removeAttribute('arjs');
+            scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
+        }
 
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const modelUrl = urlParams.get('url');
+
+            if (!modelUrl) {
+                console .warn('No model URL provided in the query string.');
+                return;
+            }
+
+            const modelEntity = document.getElementById('model');
+            modelEntity.removeAttribute('gltf-model');
+            modelEntity.setAttribute('animation', 'property: scale; to: 0.1,0.1,0.1; loop: false');
+            resetScene();
+
+            setTimeout(() => {
+                modelEntity.setAttribute('gltf-model', url(${modelUrl}));
+                console.log('Model loaded from URL:', modelUrl);
+            }, 500);
+        });
+    </script> -->
     <script>
-      window.addEventListener('DOMContentLoaded', () => {
-          console.log('Page loaded. Waiting for model URL...');
-          
-          // Get the model URL from the URL query parameters
-          const urlParams = new URLSearchParams(window.location.search);
-        //   const modelUrl = urlParams.get('url');
-        const modelUrl = new URLSearchParams(window.location.search).get('url');
-        document.getElementById('model').setAttribute('gltf-model', `url(${modelUrl})`);
+        function resetScene() {
+            const scene = document.querySelector('a-scene');
+            scene.removeAttribute('arjs');
+            scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
+        }
+    
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            // const modelUrl = urlParams.get('url');
+    
+            const modelUrl = new URLSearchParams(window.location.search).get('url');
+            document.getElementById('model').setAttribute('gltf-model', `url(${modelUrl})`);
 
-          if (!modelUrl) {
-              console.warn('No model URL provided.');
-              return;
-          }
+
+            if (!modelUrl) {
+                console.warn('No model URL provided in the query string.');
+                return;
+            }
+    
+            const modelEntity = document.getElementById('model');
+            modelEntity.removeAttribute('gltf-model');
+            resetScene();
+    
+            setTimeout(() => {
+                modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+                modelEntity.setAttribute('scale', '0.1 0.1 0.1');
+                console.log('Model loaded from URL:', modelUrl);
+            }, 1000);
+        });
+    </script>
+    
   
-          console.log('Model URL retrieved:', modelUrl);
-  
-          // Check if the URL is base64
-          if (modelUrl.startsWith('data:model/gltf-binary;base64,')) {
-              // If base64, directly load the base64 data into the model entity
-              const modelEntity = document.getElementById('model');
-              modelEntity.setAttribute('gltf-model', modelUrl);
-              modelEntity.setAttribute('visible', 'true');
-              console.log('Model loaded from base64 URL:', modelUrl);
-          } else {
-              // Fallback to using the URL if it's a direct URL to a file
-              const modelEntity = document.getElementById('model');
-              modelEntity.setAttribute('gltf-model', modelUrl);
-              modelEntity.setAttribute('visible', 'true');
-              console.log('Model loaded from URL:', modelUrl);
-          }
-      });
-  </script>
-  
-</body>
+      </body>
 </html>
