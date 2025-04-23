@@ -81,8 +81,10 @@
           
           // Get the model URL from the URL query parameters
           const urlParams = new URLSearchParams(window.location.search);
-          const modelUrl = urlParams.get('url');
-  
+        //   const modelUrl = urlParams.get('url');
+        const modelUrl = new URLSearchParams(window.location.search).get('url');
+        document.getElementById('model').setAttribute('gltf-model', `url(${modelUrl})`);
+
           if (!modelUrl) {
               console.warn('No model URL provided.');
               return;
