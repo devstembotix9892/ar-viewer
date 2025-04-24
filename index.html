@@ -50,19 +50,19 @@
             console.log('[🔗 Model URL Detected]', modelUrl);
 
             const modelEntity = document.getElementById('model');
-            if (!modelEntity) {
-                console.error('[❌ Model Entity Not Found]');
-                return;
-            }
+if (!modelEntity) {
+    console.error('[❌ Model Entity Not Found]');
+    return;
+}
 
-            modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-           
-            modelEntity.setAttribute('scale', '0.1 0.1 0.1');
+modelEntity.setAttribute('gltf-model', modelUrl); // ← no `url(...)`
+modelEntity.setAttribute('scale', '0.1 0.1 0.1');
 
-            console.log('[✅ Model Attribute Set]', {
-                modelEntity,
-                modelUrl
-            });
+console.log('[✅ Model Attribute Set]', {
+    modelEntity,
+    modelUrl
+});
+
 
             modelEntity.addEventListener('model-loaded', () => {
                 console.log('[🎉 Model Loaded Successfully]');
