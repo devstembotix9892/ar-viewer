@@ -44,7 +44,6 @@
 
             if (!modelUrl) {
                 console.warn('[⚠️ Missing model URL] No model URL provided in the query string.');
-                alert('No model URL provided. Please add a URL parameter like "?url=https://example.com/model.glb".');
                 return;
             }
 
@@ -53,12 +52,11 @@
             const modelEntity = document.getElementById('model');
             if (!modelEntity) {
                 console.error('[❌ Model Entity Not Found]');
-                alert('Model entity not found. Check the HTML structure.');
                 return;
             }
 
-            // Set the GLB model URL
             modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+           
             modelEntity.setAttribute('scale', '0.1 0.1 0.1');
 
             console.log('[✅ Model Attribute Set]', {
@@ -66,16 +64,12 @@
                 modelUrl
             });
 
-            // Event listener for successful model load
             modelEntity.addEventListener('model-loaded', () => {
                 console.log('[🎉 Model Loaded Successfully]');
-                alert('3D model loaded successfully!');
             });
 
-            // Event listener for model load errors
             modelEntity.addEventListener('model-error', (e) => {
                 console.error('[❌ Model Load Error]', e.detail);
-                alert('Failed to load the 3D model. Please check the URL and try again.');
             });
         });
     </script>
