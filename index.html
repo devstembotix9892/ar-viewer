@@ -21,66 +21,23 @@
         </a-marker>
         <a-entity camera></a-entity>
       </a-scene>
-    <!-- <script>
-        function resetScene() {
-            const scene = document.querySelector('a-scene');
-            scene.removeAttribute('arjs');
-            scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
-        }
-
+  
+       
+    <script>
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const modelUrl = urlParams.get('url');
-
-            if (!modelUrl) {
-                console .warn('No model URL provided in the query string.');
-                return;
-            }
-
-            const modelEntity = document.getElementById('model');
-            modelEntity.removeAttribute('gltf-model');
-            modelEntity.setAttribute('animation', 'property: scale; to: 0.1,0.1,0.1; loop: false');
-            resetScene();
-
-            setTimeout(() => {
-                modelEntity.setAttribute('gltf-model', url(${modelUrl}));
-                console.log('Model loaded from URL:', modelUrl);
-            }, 500);
-        });
-    </script> -->
-    <script>
-        function resetScene() {
-            const scene = document.querySelector('a-scene');
-            scene.removeAttribute('arjs');
-            scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
-        }
-
-
-
-        
     
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            // const modelUrl = urlParams.get('url');
-    
-            const modelUrl = new URLSearchParams(window.location.search).get('url');
-            document.getElementById('model').setAttribute('gltf-model', `url(${modelUrl})`);
-
-
             if (!modelUrl) {
                 console.warn('No model URL provided in the query string.');
                 return;
             }
     
             const modelEntity = document.getElementById('model');
-            modelEntity.removeAttribute('gltf-model');
-            resetScene();
+            modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+            modelEntity.setAttribute('scale', '0.1 0.1 0.1');
     
-            setTimeout(() => {
-                modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-                modelEntity.setAttribute('scale', '0.1 0.1 0.1');
-                console.log('Model loaded from URL:', modelUrl);
-            }, 1000);
+            console.log('Model set to load from URL:', modelUrl);
         });
     </script>
     
