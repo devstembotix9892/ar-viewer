@@ -125,69 +125,63 @@
         renderer="logarithmicDepthBuffer: true;"
     >
         <a-marker preset="hiro" id="hiro-marker">
-            <a-entity 
-                id="model" 
-                gltf-model="" 
-                scale="0.5 0.5 0.5" 
-                position="0 0 0"
-                animation-mixer
-            ></a-entity>
+           <!-- Add these components to the model entity -->
+<a-entity id="model"
+gltf-model="#modelAsset"
+position="0 1.5 0"
+scale="0.5 0.5 0.5"
+shadow="type: basic"
+animation-mixer
+rotation="0 180 0">
+</a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
-    <script>
-        // Initialize AR scene
-        console.log('[AR Viewer] Initializing...');
+  <script>
+window.addEventListener('DOMContentLoaded', () => {
+    const modelUrl = new URLSearchParams(window.location.search).get('url');
+    
+    // Validate URL format
+    if (!modelUrl || !modelUrl.startsWith('http')) {
+        showError('Invalid model URL format');
+        return;
+    }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const instructions = document.getElementById('instructions');
-            const urlParams = new URLSearchParams(window.location.search);
-            const modelUrl = urlParams.get('url');
+    // Create assets dynamically
+    const scene = document.querySelector('a-scene');
+    const assets = document.createElement('a-assets');
+    assets.innerHTML = `<a-asset-item id="modelAsset" src="${modelUrl}"></a-asset-item>`;
+    scene.appendChild(assets);
 
-            // Validate URL parameter
-            if (!modelUrl) {
-                instructions.innerHTML = '❌ Missing model URL parameter';
-                console.error('Missing URL parameter');
-                return;
-            }
+    // Configure model entity with proper asset reference
+    const modelEntity = document.getElementById('model');
+    modelEntity.setAttribute('gltf-model', '#modelAsset');
 
-            // Configure model entity
-            const modelEntity = document.getElementById('model');
-            modelEntity.setAttribute('gltf-model', modelUrl);
-            
-            // Add model event listeners
-            modelEntity.addEventListener('model-loading', () => {
-                instructions.innerHTML = '⏳ Loading model...';
-                console.log('Model loading started');
-            });
+    // Add enhanced error handling
+    modelEntity.addEventListener('model-error', (e) => {
+        console.error('Full error details:', e);
+        showError(`Model load failed: ${e.detail.message}`);
+        logNetworkError(modelUrl);
+    });
+});
 
-            modelEntity.addEventListener('model-loaded', () => {
-                instructions.innerHTML = '✅ Model loaded!<br>📸 Point camera at Hiro marker';
-                console.log('Model successfully loaded');
-                
-                // Add automatic rotation
-                modelEntity.setAttribute('animation-mixer', 'clip: rotate; loop: repeat');
-            });
+async function logNetworkError(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+    }
+}
 
-            modelEntity.addEventListener('model-error', (e) => {
-                instructions.innerHTML = '❌ Error loading model';
-                console.error('Model load error:', e.detail);
-            });
-
-            // Add resize handler
-            window.addEventListener('resize', () => {
-                const scene = document.querySelector('a-scene');
-                if (scene.is('ar-mode')) {
-                    scene.enterVR();
-                }
-            });
-        });
-
-        // Add AR.js specific configuration
-        document.querySelector('a-scene').addEventListener('arjs-video-loaded', () => {
-            console.log('AR.js video system initialized');
-        });
-    </script>
+function showError(message) {
+    const instructions = document.getElementById('instructions');
+    instructions.innerHTML = `❌ ${message}`;
+    instructions.style.color = '#ff4444';
+}
+</script>
 </body>
 </html>
