@@ -46,7 +46,7 @@
     <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
   </a-scene>
 
-  <script>
+  <!-- <script>
     window.addEventListener('DOMContentLoaded', () => {
       const modelUrl = new URLSearchParams(window.location.search).get('url');
 
@@ -69,6 +69,42 @@
         console.error('❌ Error loading model:', e.detail);
       });
     });
+  </script> -->
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 DOM fully loaded, initializing AR scene...');
+
+  const modelUrl = new URLSearchParams(window.location.search).get('url');
+  const modelEntity = document.getElementById('model');
+  const marker = document.getElementById('hiro-marker');
+
+  if (!modelUrl) {
+    console.warn('❗ No model URL provided in the query string');
+    return;
+  }
+
+  console.log('🌐 Loading Model URL:', modelUrl);
+
+  modelEntity.setAttribute('gltf-model', modelUrl);
+
+  modelEntity.addEventListener('model-loaded', () => {
+    console.log('✅ Model successfully loaded in AR');
+    modelEntity.setAttribute('visible', 'true');
+  });
+
+  modelEntity.addEventListener('model-error', (e) => {
+    console.error('❌ Error loading model:', e.detail);
+  });
+
+  marker.addEventListener('markerFound', () => {
+    console.log('📍 Marker found');
+  });
+
+  marker.addEventListener('markerLost', () => {
+    console.log('🚫 Marker lost');
+  });
+});
+
   </script>
 </body>
 </html>
