@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>AR Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
@@ -18,7 +18,7 @@
       left: 10px;
       color: white;
       font-size: 16px;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       padding: 10px;
       z-index: 10;
       border-radius: 6px;
@@ -26,12 +26,24 @@
   </style>
 </head>
 <body>
-  <div id="instructions">📸 Point your camera at the marker (e.g., Hiro marker).</div>
+  <div id="instructions">📸 Point your camera at the Hiro marker (black square with white H).</div>
+
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-assets id="assets"></a-assets>
+
     <a-marker preset="hiro" id="hiro-marker">
-      <a-entity id="model" scale="0.1 0.1 0.1" position="0 0 0"></a-entity>
+      <a-entity 
+        id="model" 
+        position="0 0 0" 
+        scale="0.5 0.5 0.5" 
+        rotation="0 0 0"
+        visible="true"
+      ></a-entity>
     </a-marker>
+
     <a-entity camera></a-entity>
+    <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+    <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
   </a-scene>
 
   <script>
@@ -39,25 +51,23 @@
       const modelUrl = new URLSearchParams(window.location.search).get('url');
 
       if (!modelUrl) {
-        console.warn('[⚠️ No model URL provided]');
+        console.warn('❗ No model URL provided in the query string');
         return;
       }
 
-      console.log('[🔗 Loading Model URL]', modelUrl);
+      console.log('🌐 Loading Model URL:', modelUrl);
 
       const modelEntity = document.getElementById('model');
-      if (modelEntity) {
-        modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
-        modelEntity.setAttribute('scale', '0.1 0.1 0.1');
+      modelEntity.setAttribute('gltf-model', modelUrl);
 
-        modelEntity.addEventListener('model-loaded', () => {
-          console.log('[🎉 Model Loaded]');
-        });
+      modelEntity.addEventListener('model-loaded', () => {
+        console.log('✅ Model successfully loaded in AR');
+        modelEntity.setAttribute('visible', 'true');
+      });
 
-        modelEntity.addEventListener('model-error', (e) => {
-          console.error('[❌ Model Load Error]', e.detail);
-        });
-      }
+      modelEntity.addEventListener('model-error', (e) => {
+        console.error('❌ Error loading model:', e.detail);
+      });
     });
   </script>
 </body>
