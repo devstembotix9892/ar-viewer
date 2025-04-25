@@ -32,12 +32,14 @@
     <a-assets id="assets"></a-assets>
 
     <a-marker preset="hiro" id="hiro-marker">
+      <!-- Entity for the model -->
       <a-entity 
         id="model" 
         position="0 0 0" 
         scale="0.5 0.5 0.5" 
         rotation="0 0 0"
-        visible="true"
+        visible="false"  <!-- Initially set to false -->
+        gltf-model="#model-url"
       ></a-entity>
     </a-marker>
 
@@ -48,6 +50,7 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
+      // Get the model URL from the query string
       const modelUrl = new URLSearchParams(window.location.search).get('url');
 
       if (!modelUrl) {
@@ -57,14 +60,17 @@
 
       console.log('🌐 Loading Model URL:', modelUrl);
 
+      // Find the model entity
       const modelEntity = document.getElementById('model');
       modelEntity.setAttribute('gltf-model', modelUrl);
 
+      // Make the model visible once it is loaded
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
-        modelEntity.setAttribute('visible', 'true');
+        modelEntity.setAttribute('visible', 'true');  // Ensure visibility is set to true
       });
 
+      // Handle any errors that occur during model loading
       modelEntity.addEventListener('model-error', (e) => {
         console.error('❌ Error loading model:', e.detail);
       });
