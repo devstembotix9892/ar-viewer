@@ -32,14 +32,8 @@
     <a-assets id="assets"></a-assets>
 
     <a-marker preset="hiro" id="hiro-marker">
-      <a-entity 
-        id="model" 
-        position="0 0 0" 
-        scale="0.5 0.5 0.5" 
-        rotation="0 0 0"
-        visible="false" 
-        gltf-model="#your-model-url">
-      </a-entity>
+        <a-entity id="model" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0" visible="true" gltf-model="url(${modelUrl})"></a-entity>
+
     </a-marker>
 
     <a-entity camera></a-entity>
