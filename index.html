@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -82,6 +82,146 @@
 
       marker.addEventListener('markerLost', () => {
         console.log('🚫 Marker lost');
+      });
+    });
+  </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      z-index: 10;
+      border-radius: 6px;
+      max-width: 90%;
+    }
+    #loading-bar {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #progress {
+      height: 100%;
+      background: #4CAF50;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="instructions">⏳ Loading AR Viewer...</div>
+  <div id="loading-bar" style="display: none;">
+    <div id="progress"></div>
+  </div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-assets id="assets">
+      <!-- Assets will be loaded dynamically -->
+    </a-assets>
+
+    <a-marker preset="hiro" id="hiro-marker">
+      <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+    <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+    <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
+  </a-scene>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('📄 DOM fully loaded, initializing AR scene...');
+      
+      const modelUrl = new URLSearchParams(window.location.search).get('url');
+      const modelEntity = document.getElementById('model');
+      const marker = document.getElementById('hiro-marker');
+      const instructions = document.getElementById('instructions');
+      const loadingBar = document.getElementById('loading-bar');
+      const progress = document.getElementById('progress');
+
+      if (!modelUrl) {
+        console.warn('❗ No model URL provided in the query string');
+        instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
+        return;
+      }
+
+      console.log('🌐 Loading Model URL:', modelUrl);
+      instructions.textContent = '⏳ Loading 3D model...';
+      loadingBar.style.display = 'block';
+
+      // Create progress event listener
+      const progressHandler = (event) => {
+        const percentLoaded = Math.round(event.detail.totalProgress * 100);
+        progress.style.width = `${percentLoaded}%`;
+        
+        if (percentLoaded === 100) {
+          setTimeout(() => {
+            loadingBar.style.display = 'none';
+          }, 500);
+        }
+      };
+
+      // Load the model
+      modelEntity.addEventListener('progress', progressHandler);
+      modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
+
+      modelEntity.addEventListener('model-loaded', () => {
+        console.log('✅ Model successfully loaded in AR');
+        modelEntity.setAttribute('visible', 'true');
+        instructions.textContent = '📸 Point your camera at the Hiro marker';
+        
+        // Auto-scale model to reasonable size
+        const box = new THREE.Box3().setFromObject(modelEntity.object3D);
+        const size = box.getSize(new THREE.Vector3()).length();
+        const scale = 1 / size;
+        modelEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
+      });
+
+      modelEntity.addEventListener('model-error', (e) => {
+        console.error('❌ Error loading model:', e.detail);
+        instructions.textContent = '⚠️ Failed to load model. Check console for details.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
+        loadingBar.style.display = 'none';
+      });
+
+      marker.addEventListener('markerFound', () => {
+        console.log('📍 Marker found');
+        instructions.textContent = '✅ Marker detected!';
+        instructions.style.background = 'rgba(0, 255, 0, 0.6)';
+      });
+
+      marker.addEventListener('markerLost', () => {
+        console.log('🚫 Marker lost');
+        instructions.textContent = '📸 Point your camera at the Hiro marker';
+        instructions.style.background = 'rgba(0, 0, 0, 0.6)';
       });
     });
   </script>
