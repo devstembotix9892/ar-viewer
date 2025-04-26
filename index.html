@@ -61,6 +61,7 @@
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
         modelEntity.setAttribute('visible', 'true');  // Make the model visible
+        console.log('Model visibility:', modelEntity.getAttribute('visible')); // Debug log
       });
 
       modelEntity.addEventListener('model-error', (e) => {
