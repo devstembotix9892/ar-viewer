@@ -88,7 +88,6 @@
 </body>
 </html> -->
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,6 +96,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
   <style>
     html, body {
       margin: 0; padding: 0;
@@ -133,6 +133,15 @@
       width: 0%;
       transition: width 0.3s;
     }
+    #marker-image {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 100px;
+      height: 100px;
+      border: 2px solid white;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -140,13 +149,13 @@
   <div id="loading-bar" style="display: none;">
     <div id="progress"></div>
   </div>
+  <img id="marker-image" style="display: none;" />
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <a-assets id="assets">
-      <!-- Assets will be loaded dynamically -->
-    </a-assets>
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="logarithmicDepthBuffer: true;">
+    <a-assets id="assets"></a-assets>
 
-    <a-marker preset="hiro" id="hiro-marker">
+    <!-- Dynamic marker based on URL parameter -->
+    <a-marker id="dynamic-marker" type="pattern" url="">
       <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity>
     </a-marker>
 
@@ -159,12 +168,16 @@
     window.addEventListener('DOMContentLoaded', () => {
       console.log('📄 DOM fully loaded, initializing AR scene...');
       
-      const modelUrl = new URLSearchParams(window.location.search).get('url');
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelUrl = urlParams.get('url');
+      const markerPattern = urlParams.get('marker') || 'hiro';
+      
       const modelEntity = document.getElementById('model');
-      const marker = document.getElementById('hiro-marker');
+      const marker = document.getElementById('dynamic-marker');
       const instructions = document.getElementById('instructions');
       const loadingBar = document.getElementById('loading-bar');
       const progress = document.getElementById('progress');
+      const markerImage = document.getElementById('marker-image');
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
@@ -173,11 +186,17 @@
         return;
       }
 
+      // Set marker pattern
+      const markerUrl = `https://arjs-custom-markers.glitch.me/marker-images/${markerPattern}-pattern-marker.png`;
+      marker.setAttribute('url', markerUrl);
+      markerImage.src = markerUrl;
+      markerImage.style.display = 'block';
+
       console.log('🌐 Loading Model URL:', modelUrl);
       instructions.textContent = '⏳ Loading 3D model...';
       loadingBar.style.display = 'block';
 
-      // Create progress event listener
+      // Progress event listener
       const progressHandler = (event) => {
         const percentLoaded = Math.round(event.detail.totalProgress * 100);
         progress.style.width = `${percentLoaded}%`;
@@ -196,9 +215,9 @@
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
         modelEntity.setAttribute('visible', 'true');
-        instructions.textContent = '📸 Point your camera at the Hiro marker';
+        instructions.textContent = `📸 Point your camera at the ${markerPattern} marker`;
         
-        // Auto-scale model to reasonable size
+        // Auto-scale model
         const box = new THREE.Box3().setFromObject(modelEntity.object3D);
         const size = box.getSize(new THREE.Vector3()).length();
         const scale = 1 / size;
@@ -220,7 +239,7 @@
 
       marker.addEventListener('markerLost', () => {
         console.log('🚫 Marker lost');
-        instructions.textContent = '📸 Point your camera at the Hiro marker';
+        instructions.textContent = `📸 Point your camera at the ${markerPattern} marker`;
         instructions.style.background = 'rgba(0, 0, 0, 0.6)';
       });
     });
