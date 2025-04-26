@@ -97,6 +97,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
   <style>
     html, body {
       margin: 0; padding: 0;
@@ -146,7 +147,7 @@
       <!-- Assets will be loaded dynamically -->
     </a-assets>
 
-    <a-marker  type="pattern"  preset="hiro" id="hiro-marker">
+    <a-marker  type="pattern"  preset="custom" id="hiro-marker">
       <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="true"></a-entity>
     </a-marker>
 
