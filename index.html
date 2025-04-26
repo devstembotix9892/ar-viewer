@@ -88,7 +88,6 @@
 </body>
 </html> -->
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,39 +114,40 @@
       z-index: 10;
       border-radius: 6px;
       max-width: 90%;
+      transition: all 0.3s ease;
     }
-    #loading-bar {
+    #marker-help {
       position: absolute;
-      top: 50%;
+      bottom: 20px;
       left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px;
-      height: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      overflow: hidden;
+      transform: translateX(-50%);
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      z-index: 10;
     }
-    #progress {
-      height: 100%;
-      background: #4CAF50;
-      width: 0%;
-      transition: width 0.3s;
+    #marker-help a {
+      color: #4fc3f7;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
   <div id="instructions">⏳ Loading AR Viewer...</div>
-  <div id="loading-bar" style="display: none;">
-    <div id="progress"></div>
+  <div id="marker-help">
+    Need the Hiro marker? <a href="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" target="_blank">Download here</a>
   </div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
     <a-assets id="assets">
-      <!-- Assets will be loaded dynamically -->
+      <a-asset-item id="model-asset" src=""></a-asset-item>
     </a-assets>
 
     <a-marker preset="hiro" id="hiro-marker">
-      <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity>
+      <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"
+                gltf-model=""></a-entity>
     </a-marker>
 
     <a-entity camera></a-entity>
@@ -163,8 +163,7 @@
       const modelEntity = document.getElementById('model');
       const marker = document.getElementById('hiro-marker');
       const instructions = document.getElementById('instructions');
-      const loadingBar = document.getElementById('loading-bar');
-      const progress = document.getElementById('progress');
+      const markerHelp = document.getElementById('marker-help');
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
@@ -175,22 +174,8 @@
 
       console.log('🌐 Loading Model URL:', modelUrl);
       instructions.textContent = '⏳ Loading 3D model...';
-      loadingBar.style.display = 'block';
 
-      // Create progress event listener
-      const progressHandler = (event) => {
-        const percentLoaded = Math.round(event.detail.totalProgress * 100);
-        progress.style.width = `${percentLoaded}%`;
-        
-        if (percentLoaded === 100) {
-          setTimeout(() => {
-            loadingBar.style.display = 'none';
-          }, 500);
-        }
-      };
-
-      // Load the model
-      modelEntity.addEventListener('progress', progressHandler);
+      // Set the model URL
       modelEntity.setAttribute('gltf-model', `url(${modelUrl})`);
 
       modelEntity.addEventListener('model-loaded', () => {
@@ -198,28 +183,33 @@
         modelEntity.setAttribute('visible', 'true');
         instructions.textContent = '📸 Point your camera at the Hiro marker';
         
-        // Auto-scale model to reasonable size
-        const box = new THREE.Box3().setFromObject(modelEntity.object3D);
-        const size = box.getSize(new THREE.Vector3()).length();
-        const scale = 1 / size;
-        modelEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
+        // Auto-hide instructions after 5 seconds
+        setTimeout(() => {
+          instructions.style.opacity = '0';
+          setTimeout(() => instructions.style.display = 'none', 300);
+        }, 5000);
       });
 
       modelEntity.addEventListener('model-error', (e) => {
         console.error('❌ Error loading model:', e.detail);
         instructions.textContent = '⚠️ Failed to load model. Check console for details.';
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
-        loadingBar.style.display = 'none';
       });
 
       marker.addEventListener('markerFound', () => {
         console.log('📍 Marker found');
         instructions.textContent = '✅ Marker detected!';
-        instructions.style.background = 'rgba(0, 255, 0, 0.6)';
+        instructions.style.background = 'rgba(0, 200, 0, 0.6)';
+        setTimeout(() => {
+          instructions.style.opacity = '0';
+          setTimeout(() => instructions.style.display = 'none', 300);
+        }, 2000);
       });
 
       marker.addEventListener('markerLost', () => {
         console.log('🚫 Marker lost');
+        instructions.style.display = 'block';
+        instructions.style.opacity = '1';
         instructions.textContent = '📸 Point your camera at the Hiro marker';
         instructions.style.background = 'rgba(0, 0, 0, 0.6)';
       });
