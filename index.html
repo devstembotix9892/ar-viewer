@@ -11,6 +11,7 @@
       margin: 0; padding: 0;
       width: 100%; height: 100%;
       overflow: hidden;
+      font-family: sans-serif;
     }
     #instructions {
       position: absolute;
@@ -22,17 +23,19 @@
       padding: 10px;
       z-index: 10;
       border-radius: 6px;
+      max-width: 90%;
     }
   </style>
 </head>
 <body>
-  <div id="instructions">📸 Point your camera at the Hiro marker</div>
+  <div id="instructions">⏳ Loading AR Viewer...</div>
 
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
     <a-assets id="assets"></a-assets>
 
     <a-marker preset="hiro" id="hiro-marker">
-      <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity>  </a-marker>
+      <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity>
+    </a-marker>
 
     <a-entity camera></a-entity>
     <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
@@ -46,25 +49,31 @@
       const modelUrl = new URLSearchParams(window.location.search).get('url');
       const modelEntity = document.getElementById('model');
       const marker = document.getElementById('hiro-marker');
+      const instructions = document.getElementById('instructions');
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
+        instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
         return;
       }
 
       console.log('🌐 Loading Model URL:', modelUrl);
+      instructions.textContent = '⏳ Loading 3D model...';
 
-      // Set model URL dynamically
+      // Load the model
       modelEntity.setAttribute('gltf-model', modelUrl);
 
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
-        modelEntity.setAttribute('visible', 'true');  // Make the model visible
-        console.log('Model visibility:', modelEntity.getAttribute('visible')); // Debug log
+        modelEntity.setAttribute('visible', 'true');
+        instructions.textContent = '📸 Point your camera at the Hiro marker';
       });
 
       modelEntity.addEventListener('model-error', (e) => {
         console.error('❌ Error loading model:', e.detail);
+        instructions.textContent = '⚠️ Failed to load model.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
       marker.addEventListener('markerFound', () => {
