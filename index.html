@@ -1,102 +1,4 @@
 <!-- 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AR Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-    #instructions {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 16px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px;
-      z-index: 10;
-      border-radius: 6px;
-      max-width: 90%;
-    }
-  </style>
-</head>
-<body>
-  <div id="instructions">⏳ Loading AR Viewer...</div>
-
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <a-assets id="assets"></a-assets>
-
-  
-
- <a-marker type="pattern" url="https://devstembotix9892.github.io/stembotix-ar-marker/stembotix-ar-marker.patt" id="marker">
-
-
-
-  <a-entity id="model" gltf-model="..." visible="false" position="0 0 0"></a-entity>
-</a-marker>
-
-
-    <a-entity camera></a-entity>
-    <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
-    <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
-  </a-scene>
-
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('📄 DOM fully loaded, initializing AR scene...');
-      
-      const modelUrl = new URLSearchParams(window.location.search).get('url');
-      const modelEntity = document.getElementById('model');
-const marker = document.getElementById('marker');
-
-      const instructions = document.getElementById('instructions');
-
-      if (!modelUrl) {
-        console.warn('❗ No model URL provided in the query string');
-        instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
-        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
-        return;
-      }
-
-      console.log('🌐 Loading Model URL:', modelUrl);
-      instructions.textContent = '⏳ Loading 3D model...';
-
-      // Load the model
-      modelEntity.setAttribute('gltf-model', modelUrl);
-
-      modelEntity.addEventListener('model-loaded', () => {
-        console.log('✅ Model successfully loaded in AR');
-        modelEntity.setAttribute('visible', 'true');
-        instructions.textContent = '📸 Point your camera at the STEMbotix marker';
-      });
-
-      modelEntity.addEventListener('model-error', (e) => {
-        console.error('❌ Error loading model:', e.detail);
-        instructions.textContent = '⚠️ Failed to load model.';
-        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
-      });
-
-      marker.addEventListener('markerFound', () => {
-        console.log('📍 Marker found');
-      });
-
-      marker.addEventListener('markerLost', () => {
-        console.log('🚫 Marker lost');
-      });
-    });
-  </script>
-</body>
-</html> -->
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -186,5 +88,175 @@ const marker = document.getElementById('marker');
       });
     });
   </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      z-index: 10;
+      border-radius: 6px;
+      max-width: 90%;
+    }
+  </style>
+</head>
+<body>
+
+<div id="instructions">⏳ Loading AR Viewer...</div>
+
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+
+  <a-marker preset="hiro" id="hiro-marker">
+    <a-entity 
+      id="model"
+      position="0 0 0"
+      rotation="0 0 0"
+      scale="1 1 1"
+      visible="false"
+      ar-controls>
+    </a-entity>
+  </a-marker>
+
+  <a-entity camera></a-entity>
+  <a-light type="ambient" intensity="1.2"></a-light>
+  <a-light type="directional" position="1 2 1" intensity="1"></a-light>
+
+</a-scene>
+
+<script>
+AFRAME.registerComponent('ar-controls', {
+  init: function () {
+    const el = this.el;
+
+    let currentScale = 1;
+    let isDragging = false;
+    let lastX = 0;
+
+    // Auto-fix model when loaded
+    el.addEventListener('model-loaded', () => {
+      const obj = el.getObject3D('mesh');
+      if (!obj) return;
+
+      // Compute bounding box
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      const maxSize = Math.max(size.x, size.y, size.z);
+      const scale = 1 / maxSize;
+
+      currentScale = scale;
+
+      el.setAttribute('scale', `${scale} ${scale} ${scale}`);
+      el.setAttribute('rotation', `-90 0 0`);
+      el.setAttribute('position', `0 0 0`);
+    });
+
+    // Touch rotate
+    window.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+      }
+    });
+
+    window.addEventListener('touchmove', e => {
+      if (!isDragging) return;
+
+      const dx = e.touches[0].clientX - lastX;
+      lastX = e.touches[0].clientX;
+
+      const rot = el.getAttribute('rotation');
+      el.setAttribute('rotation', {
+        x: rot.x,
+        y: rot.y + dx * 0.5,
+        z: rot.z
+      });
+    });
+
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    // Pinch zoom
+    let startDist = 0;
+
+    window.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        startDist = Math.sqrt(dx * dx + dy * dy);
+      }
+    });
+
+    window.addEventListener('touchmove', e => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        const delta = dist - startDist;
+        startDist = dist;
+
+        currentScale += delta * 0.0008;
+        currentScale = Math.max(0.05, Math.min(5, currentScale));
+
+        el.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+      }
+    });
+  }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+
+  const modelUrl = new URLSearchParams(window.location.search).get('url');
+  const modelEntity = document.getElementById('model');
+  const instructions = document.getElementById('instructions');
+
+  if (!modelUrl) {
+    instructions.textContent = '⚠️ Use ?url=yourModel.glb';
+    instructions.style.background = 'rgba(255,0,0,0.6)';
+    return;
+  }
+
+  instructions.textContent = '⏳ Loading 3D model...';
+
+  modelEntity.setAttribute('gltf-model', modelUrl);
+
+  modelEntity.addEventListener('model-loaded', () => {
+    modelEntity.setAttribute('visible', 'true');
+    instructions.textContent = '📸 Point camera at Hiro marker | Drag = Rotate | Pinch = Zoom';
+  });
+
+  modelEntity.addEventListener('model-error', () => {
+    instructions.textContent = '❌ Failed to load model';
+    instructions.style.background = 'rgba(255,0,0,0.6)';
+  });
+
+});
+</script>
+
 </body>
 </html>
