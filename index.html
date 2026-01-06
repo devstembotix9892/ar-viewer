@@ -138,11 +138,18 @@ const marker = document.getElementById('marker');
     <a-marker preset="hiro" id="hiro-marker">
       
       <!-- <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity> -->
-      <a-entity id="model" 
+      <!-- <a-entity id="model" 
           position="0 0.5 0" 
           scale="0.5 0.5 0.5" 
           rotation="-90 0 0" 
-          visible="false"></a-entity>
+          visible="false"></a-entity> -->
+<a-entity id="model"
+          position="0 0.5 0"
+          scale="0.5 0.5 0.5"
+          rotation="-90 0 0"
+          animation="property: rotation; to: -90 360 0; loop: true; dur: 8000"
+          visible="false">
+</a-entity>
 
     </a-marker>
 
