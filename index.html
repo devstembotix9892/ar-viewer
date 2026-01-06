@@ -92,7 +92,7 @@
 </html> -->
 
 <!DOCTYPE html>
-<html lang="en">
+AFRAME.registerComponent<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>AR Viewer</title>
@@ -150,13 +150,17 @@ AFRAME.registerComponent('ar-controls', {
   init: function () {
     const el = this.el;
 
-    let baseScale = 1;
-    let zoomScale = 1;
-
+    let baseScale = 1;   // auto-fit scale
+    let zoomScale = 1;   // user zoom
     let isDragging = false;
     let lastX = 0;
 
-    // Auto-fit model ONCE
+    function updateScale() {
+      const s = baseScale * zoomScale;
+      el.setAttribute('scale', `${s} ${s} ${s}`);
+    }
+
+    // Auto-fit when model loads
     el.addEventListener('model-loaded', () => {
       const obj = el.getObject3D('mesh');
       if (!obj) return;
@@ -166,7 +170,9 @@ AFRAME.registerComponent('ar-controls', {
       box.getSize(size);
 
       const maxSize = Math.max(size.x, size.y, size.z);
+
       baseScale = 0.8 / maxSize;
+      zoomScale = 1;
 
       updateScale();
 
@@ -175,12 +181,7 @@ AFRAME.registerComponent('ar-controls', {
       el.setAttribute('position', `0 0 0`);
     });
 
-    function updateScale() {
-      const s = baseScale * zoomScale;
-      el.setAttribute('scale', `${s} ${s} ${s}`);
-    }
-
-    // 👉 Drag rotate
+    // 👉 Drag rotate (only Y axis)
     window.addEventListener('touchstart', e => {
       if (e.touches.length === 1) {
         isDragging = true;
@@ -189,16 +190,18 @@ AFRAME.registerComponent('ar-controls', {
     });
 
     window.addEventListener('touchmove', e => {
-      if (!isDragging) return;
+      if (!isDragging || e.touches.length !== 1) return;
 
       const dx = e.touches[0].clientX - lastX;
       lastX = e.touches[0].clientX;
 
       const rot = el.getAttribute('rotation');
+
+      // ⚠️ Keep X locked at -90 so it never becomes top view again
       el.setAttribute('rotation', {
-        x: rot.x,
+        x: -90,
         y: rot.y + dx * 0.5,
-        z: rot.z
+        z: 0
       });
     });
 
