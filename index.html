@@ -170,8 +170,8 @@ AFRAME.registerComponent('ar-controls', {
 
       updateScale();
 
-      // ✅ FRONT VIEW FIX
-      el.setAttribute('rotation', `0 180 0`);
+      // ✅ THREE.JS EXPORT FIX (Z-up → Y-up)
+      el.setAttribute('rotation', `-90 0 0`);
       el.setAttribute('position', `0 0 0`);
     });
 
@@ -180,7 +180,7 @@ AFRAME.registerComponent('ar-controls', {
       el.setAttribute('scale', `${s} ${s} ${s}`);
     }
 
-    // 👉 Rotate with drag
+    // 👉 Drag rotate
     window.addEventListener('touchstart', e => {
       if (e.touches.length === 1) {
         isDragging = true;
