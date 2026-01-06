@@ -150,31 +150,37 @@ AFRAME.registerComponent('ar-controls', {
   init: function () {
     const el = this.el;
 
-    let currentScale = 1;
+    let baseScale = 1;
+    let zoomScale = 1;
+
     let isDragging = false;
     let lastX = 0;
 
-    // Auto-fix model when loaded
+    // Auto-fit model ONCE
     el.addEventListener('model-loaded', () => {
       const obj = el.getObject3D('mesh');
       if (!obj) return;
 
-      // Compute bounding box
       const box = new THREE.Box3().setFromObject(obj);
       const size = new THREE.Vector3();
       box.getSize(size);
 
       const maxSize = Math.max(size.x, size.y, size.z);
-      const scale = 1 / maxSize;
+      baseScale = 0.8 / maxSize;
 
-      currentScale = scale;
+      updateScale();
 
-      el.setAttribute('scale', `${scale} ${scale} ${scale}`);
-      el.setAttribute('rotation', `-90 0 0`);
+      // ✅ FRONT VIEW FIX
+      el.setAttribute('rotation', `0 180 0`);
       el.setAttribute('position', `0 0 0`);
     });
 
-    // Touch rotate
+    function updateScale() {
+      const s = baseScale * zoomScale;
+      el.setAttribute('scale', `${s} ${s} ${s}`);
+    }
+
+    // 👉 Rotate with drag
     window.addEventListener('touchstart', e => {
       if (e.touches.length === 1) {
         isDragging = true;
@@ -200,7 +206,7 @@ AFRAME.registerComponent('ar-controls', {
       isDragging = false;
     });
 
-    // Pinch zoom
+    // 🤏 Pinch zoom
     let startDist = 0;
 
     window.addEventListener('touchstart', e => {
@@ -220,43 +226,16 @@ AFRAME.registerComponent('ar-controls', {
         const delta = dist - startDist;
         startDist = dist;
 
-        currentScale += delta * 0.0008;
-        currentScale = Math.max(0.05, Math.min(5, currentScale));
+        zoomScale += delta * 0.002;
+        zoomScale = Math.max(0.3, Math.min(5, zoomScale));
 
-        el.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+        updateScale();
       }
     });
   }
 });
-
-window.addEventListener('DOMContentLoaded', () => {
-
-  const modelUrl = new URLSearchParams(window.location.search).get('url');
-  const modelEntity = document.getElementById('model');
-  const instructions = document.getElementById('instructions');
-
-  if (!modelUrl) {
-    instructions.textContent = '⚠️ Use ?url=yourModel.glb';
-    instructions.style.background = 'rgba(255,0,0,0.6)';
-    return;
-  }
-
-  instructions.textContent = '⏳ Loading 3D model...';
-
-  modelEntity.setAttribute('gltf-model', modelUrl);
-
-  modelEntity.addEventListener('model-loaded', () => {
-    modelEntity.setAttribute('visible', 'true');
-    instructions.textContent = '📸 Point camera at Hiro marker | Drag = Rotate | Pinch = Zoom';
-  });
-
-  modelEntity.addEventListener('model-error', () => {
-    instructions.textContent = '❌ Failed to load model';
-    instructions.style.background = 'rgba(255,0,0,0.6)';
-  });
-
-});
 </script>
+
 
 </body>
 </html>
