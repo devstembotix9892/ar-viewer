@@ -135,8 +135,9 @@ const marker = document.getElementById('marker');
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
     <a-assets id="assets"></a-assets>
 
-    <a-marker preset="hiro" id="hiro-marker">
-      
+    <!-- <a-marker preset="hiro" id="hiro-marker"> -->
+      <a-marker type="pattern" url="./pattern-STEMBOTIXLOGO.patt" id="custom-marker">
+
       <!-- <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity> -->
       <!-- <a-entity id="model" 
           position="0 0.5 0" 
@@ -166,7 +167,9 @@ const marker = document.getElementById('marker');
       
       const modelUrl = new URLSearchParams(window.location.search).get('url');
       const modelEntity = document.getElementById('model');
-      const marker = document.getElementById('hiro-marker');
+      // const marker = document.getElementById('hiro-marker');
+      const marker = document.getElementById('custom-marker');
+
       const instructions = document.getElementById('instructions');
 
       if (!modelUrl) {
