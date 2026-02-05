@@ -34,16 +34,6 @@
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
     <a-assets id="assets"></a-assets>
 
-
-      <!-- Movement Controls -->
-      <div id="move-controls" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 30px; z-index: 20; display: flex; flex-direction: column; align-items: center;">
-        <button id="btn-up" style="margin: 2px 0; width: 50px; height: 40px; font-size: 20px;">▲</button>
-        <div style="display: flex; flex-direction: row;">
-          <button id="btn-left" style="margin: 2px 4px; width: 50px; height: 40px; font-size: 20px;">◀</button>
-          <button id="btn-right" style="margin: 2px 4px; width: 50px; height: 40px; font-size: 20px;">▶</button>
-        </div>
-        <button id="btn-down" style="margin: 2px 0; width: 50px; height: 40px; font-size: 20px;">▼</button>
-      </div>
   
 
  <a-marker type="pattern" url="https://devstembotix9892.github.io/stembotix-ar-marker/stembotix-ar-marker.patt" id="marker">
@@ -59,6 +49,16 @@
     <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
   </a-scene>
 
+    <!-- Movement Controls -->
+    <div id="move-controls" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center;">
+      <button id="btn-up" style="margin: 2px 0; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▲</button>
+      <div style="display: flex; flex-direction: row;">
+        <button id="btn-left" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">◀</button>
+        <button id="btn-down" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▼</button>
+        <button id="btn-right" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▶</button>
+      </div>
+    </div>
+
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       console.log('📄 DOM fully loaded, initializing AR scene...');
@@ -68,41 +68,6 @@
 const marker = document.getElementById('marker');
 
       const instructions = document.getElementById('instructions');
-
-      // Movement controls
-      const btnUp = document.getElementById('btn-up');
-      const btnDown = document.getElementById('btn-down');
-      const btnLeft = document.getElementById('btn-left');
-      const btnRight = document.getElementById('btn-right');
-
-      // Move step size
-      const moveStep = 0.1;
-
-      function getPosition() {
-        // Returns [x, y, z] as numbers
-        return modelEntity.object3D.position.toArray();
-      }
-
-      function setPosition(x, y, z) {
-        modelEntity.setAttribute('position', `${x} ${y} ${z}`);
-      }
-
-      btnUp.addEventListener('click', () => {
-        const [x, y, z] = getPosition();
-        setPosition(x, y + moveStep, z);
-      });
-      btnDown.addEventListener('click', () => {
-        const [x, y, z] = getPosition();
-        setPosition(x, y - moveStep, z);
-      });
-      btnLeft.addEventListener('click', () => {
-        const [x, y, z] = getPosition();
-        setPosition(x - moveStep, y, z);
-      });
-      btnRight.addEventListener('click', () => {
-        const [x, y, z] = getPosition();
-        setPosition(x + moveStep, y, z);
-      });
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
@@ -218,6 +183,31 @@ const marker = document.getElementById('marker');
       const marker = document.getElementById('custom-marker');
 
       const instructions = document.getElementById('instructions');
+
+      // Movement controls
+      const btnUp = document.getElementById('btn-up');
+      const btnDown = document.getElementById('btn-down');
+      const btnLeft = document.getElementById('btn-left');
+      const btnRight = document.getElementById('btn-right');
+
+      // Move step size
+      const MOVE_STEP = 0.1;
+
+      function moveModel(dx, dy) {
+        if (!modelEntity) return;
+        const pos = modelEntity.getAttribute('position');
+        // Y is up in A-Frame, X is left/right
+        modelEntity.setAttribute('position', {
+          x: pos.x + dx,
+          y: pos.y + dy,
+          z: pos.z
+        });
+      }
+
+      btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
+      btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
+      btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
+      btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
