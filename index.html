@@ -1,8 +1,11 @@
 
 
   <!-- Controls Wrapper -->
-  <div id="controls-wrapper" class="glass-controls">
-    <button id="btn-zoom-in" class="glass-btn zoom-btn">Zoom In</button>
+
+  <div id="controls-wrapper" class="glass-controls new-controls-layout">
+    <div class="side-zoom-btn">
+      <button id="btn-zoom-in" class="glass-btn round-btn zoom-side-btn" title="Zoom In">＋</button>
+    </div>
     <div id="move-controls" class="move-controls">
       <button id="btn-up" class="glass-btn round-btn">▲</button>
       <div class="move-row">
@@ -11,7 +14,9 @@
         <button id="btn-right" class="glass-btn round-btn">▶</button>
       </div>
     </div>
-    <button id="btn-zoom-out" class="glass-btn zoom-btn">Zoom Out</button>
+    <div class="side-zoom-btn">
+      <button id="btn-zoom-out" class="glass-btn round-btn zoom-side-btn" title="Zoom Out">－</button>
+    </div>
   </div>
 
 
@@ -66,16 +71,43 @@
       transform: translateX(-50%);
       z-index: 30;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 12px;
+      gap: 18px;
       background: rgba(255,255,255,0.10);
       border-radius: 22px;
       box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
-      padding: 18px 24px 18px 24px;
+      padding: 18px 24px;
       backdrop-filter: blur(10px);
       border: 1.5px solid rgba(255,255,255,0.18);
       animation: controlsPopIn 1.2s cubic-bezier(.23,1.01,.32,1) 0.5s both;
+    }
+    .new-controls-layout .move-controls {
+      margin: 0 8px;
+    }
+    .side-zoom-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .zoom-side-btn {
+      font-size: 28px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007bff 0%, #00c6ff 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px #007bff22;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+    }
+    .zoom-side-btn:hover, .zoom-side-btn:focus {
+      background: linear-gradient(135deg, #00c6ff 0%, #007bff 100%);
+      color: #fff;
+      box-shadow: 0 6px 18px #00c6ff44;
+      transform: scale(1.08);
     }
     @keyframes controlsPopIn {
       from { opacity: 0; transform: translate(-50%, 40px) scale(0.95); }
@@ -153,6 +185,7 @@
       .glass-controls {
         padding: 10px 8px;
         gap: 8px;
+        flex-direction: row;
       }
       .move-row {
         gap: 6px;
