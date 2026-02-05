@@ -312,6 +312,23 @@ const marker = document.getElementById('marker');
         console.log('✅ Model successfully loaded in AR');
         modelEntity.setAttribute('visible', 'true');
         instructions.textContent = '📸 Point your camera at the Blockzie marker';
+
+        // Billboard effect: make model always face camera
+        const camera = document.querySelector('a-entity[camera]');
+        function updateBillboard() {
+          if (!camera || !modelEntity) return;
+          const camWorldPos = camera.object3D.getWorldPosition(new THREE.Vector3());
+          const modelWorldPos = modelEntity.object3D.getWorldPosition(new THREE.Vector3());
+          const lookVec = camWorldPos.clone().sub(modelWorldPos);
+          const target = modelWorldPos.clone().add(lookVec);
+          modelEntity.object3D.lookAt(target);
+        }
+        // Update every frame
+        modelEntity.sceneEl.addEventListener('renderstart', () => {
+          modelEntity.sceneEl.addEventListener('render-target-loaded', () => {
+            modelEntity.sceneEl.addEventListener('frame', updateBillboard);
+          });
+        });
       });
 
       modelEntity.addEventListener('model-error', (e) => {
