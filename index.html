@@ -1,16 +1,17 @@
 
-     <!-- Controls Wrapper -->
-  <div id="controls-wrapper" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-    <button id="btn-zoom-in" style="margin-bottom: 4px; width: 110px; height: 38px; font-size: 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; box-shadow: 0 2px 6px #0002;">Zoom In</button>
-    <div id="move-controls" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-      <button id="btn-up" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; margin-bottom: 2px; box-shadow: 0 2px 6px #0002;">▲</button>
-      <div style="display: flex; flex-direction: row; gap: 8px;">
-        <button id="btn-left" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">◀</button>
-        <button id="btn-down" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">▼</button>
-        <button id="btn-right" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">▶</button>
+
+  <!-- Controls Wrapper -->
+  <div id="controls-wrapper" class="glass-controls">
+    <button id="btn-zoom-in" class="glass-btn zoom-btn">Zoom In</button>
+    <div id="move-controls" class="move-controls">
+      <button id="btn-up" class="glass-btn round-btn">▲</button>
+      <div class="move-row">
+        <button id="btn-left" class="glass-btn round-btn">◀</button>
+        <button id="btn-down" class="glass-btn round-btn">▼</button>
+        <button id="btn-right" class="glass-btn round-btn">▶</button>
       </div>
     </div>
-    <button id="btn-zoom-out" style="margin-top: 4px; width: 110px; height: 38px; font-size: 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; box-shadow: 0 2px 6px #0002;">Zoom Out</button>
+    <button id="btn-zoom-out" class="glass-btn zoom-btn">Zoom Out</button>
   </div>
 
 
@@ -32,19 +33,144 @@
       margin: 0; padding: 0;
       width: 100%; height: 100%;
       overflow: hidden;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+      min-height: 100vh;
     }
     #instructions {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 16px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 18px;
+      background: rgba(30, 30, 60, 0.7);
+      padding: 16px 28px;
       z-index: 10;
-      border-radius: 6px;
+      border-radius: 14px;
       max-width: 90%;
+      box-shadow: 0 4px 24px #0004;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(4px);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      animation: fadeInDown 1s cubic-bezier(.23,1.01,.32,1) 0.2s both;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -30px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .glass-controls {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.10);
+      border-radius: 22px;
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+      padding: 18px 24px 18px 24px;
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      animation: controlsPopIn 1.2s cubic-bezier(.23,1.01,.32,1) 0.5s both;
+    }
+    @keyframes controlsPopIn {
+      from { opacity: 0; transform: translate(-50%, 40px) scale(0.95); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+    .move-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .move-row {
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+    }
+    .glass-btn {
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      box-shadow: 0 2px 8px #0002;
+      padding: 0 18px;
+      height: 44px;
+      min-width: 110px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      font-weight: 500;
+      outline: none;
+      letter-spacing: 0.01em;
+      margin: 0 0 0 0;
+    }
+    .glass-btn:hover, .glass-btn:focus {
+      background: rgba(0,123,255,0.22);
+      color: #fff;
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 6px 18px #007bff44;
+    }
+    .zoom-btn {
+      min-width: 120px;
+      height: 42px;
+      font-size: 17px;
+      border-radius: 10px;
+      margin-bottom: 2px;
+      margin-top: 2px;
+      background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px #007bff22;
+    }
+    .zoom-btn:hover, .zoom-btn:focus {
+      background: linear-gradient(90deg, #00c6ff 0%, #007bff 100%);
+      color: #fff;
+      box-shadow: 0 6px 18px #00c6ff44;
+    }
+    .round-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      font-size: 26px;
+      background: rgba(34,34,34,0.85);
+      color: #fff;
+      box-shadow: 0 2px 8px #0003;
+      padding: 0;
+      min-width: 0;
+      margin: 0;
+    }
+    .round-btn:hover, .round-btn:focus {
+      background: linear-gradient(135deg, #007bff 0%, #00c6ff 100%);
+      color: #fff;
+      box-shadow: 0 6px 18px #007bff44;
+      transform: scale(1.08);
+    }
+    @media (max-width: 600px) {
+      .glass-controls {
+        padding: 10px 8px;
+        gap: 8px;
+      }
+      .move-row {
+        gap: 6px;
+      }
+      .glass-btn, .zoom-btn {
+        font-size: 15px;
+        min-width: 80px;
+        height: 36px;
+      }
+      .round-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+      }
+      #instructions {
+        font-size: 15px;
+        padding: 10px 8px;
+      }
     }
   </style>
 </head>
