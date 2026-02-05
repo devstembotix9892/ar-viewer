@@ -98,6 +98,192 @@ const marker = document.getElementById('marker');
 
 
 
+
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AR Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      z-index: 10;
+      border-radius: 6px;
+      max-width: 90%;
+    }
+    /* Controls */
+    #controls {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: grid;
+      grid-template-areas: "";
+      gap: 8px;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+    .ctrl-row { display:flex; justify-content:center; gap:8px; }
+    .ctrl-btn {
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      padding: 12px 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .ctrl-btn:active { background: rgba(255,255,255,0.12); }
+  </style>
+</head>
+<body>
+  <div id="instructions">⏳ Loading AR Viewer...</div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-assets id="assets"></a-assets>
+
+  
+
+ <a-marker type="pattern" url="https://devstembotix9892.github.io/stembotix-ar-marker/stembotix-ar-marker.patt" id="marker">
+
+
+
+  <a-entity id="model" gltf-model="..." visible="false" position="0 0 0"></a-entity>
+</a-marker>
+
+
+    <a-entity camera></a-entity>
+    <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+    <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
+  </a-scene>
+
+  <!-- On-screen controls for mobile: Up/Down/Left/Right -->
+  <div id="controls">
+    <div class="ctrl-row" style="justify-content:center;">
+      <button class="ctrl-btn" id="btn-up" data-dir="up">▲</button>
+    </div>
+    <div class="ctrl-row">
+      <button class="ctrl-btn" id="btn-left" data-dir="left">◀</button>
+      <button class="ctrl-btn" id="btn-down" data-dir="down">▼</button>
+      <button class="ctrl-btn" id="btn-right" data-dir="right">▶</button>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('📄 DOM fully loaded, initializing AR scene...');
+      
+      const modelUrl = new URLSearchParams(window.location.search).get('url');
+      const modelEntity = document.getElementById('model');
+const marker = document.getElementById('marker');
+
+      const instructions = document.getElementById('instructions');
+
+      if (!modelUrl) {
+        console.warn('❗ No model URL provided in the query string');
+        instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
+        return;
+      }
+
+      console.log('🌐 Loading Model URL:', modelUrl);
+      instructions.textContent = '⏳ Loading 3D model...';
+
+      // Load the model
+      modelEntity.setAttribute('gltf-model', modelUrl);
+
+      modelEntity.addEventListener('model-loaded', () => {
+        console.log('✅ Model successfully loaded in AR');
+        modelEntity.setAttribute('visible', 'true');
+        instructions.textContent = '📸 Point your camera at the STEMbotix marker';
+      });
+
+      modelEntity.addEventListener('model-error', (e) => {
+        console.error('❌ Error loading model:', e.detail);
+        instructions.textContent = '⚠️ Failed to load model.';
+        instructions.style.background = 'rgba(255, 0, 0, 0.6)';
+      });
+
+      marker.addEventListener('markerFound', () => {
+        console.log('📍 Marker found');
+      });
+
+      marker.addEventListener('markerLost', () => {
+        console.log('🚫 Marker lost');
+      });
+
+      // Movement controls (click/touch and hold to move continuously)
+      const moveBtns = document.querySelectorAll('.ctrl-btn');
+      const step = 0.03; // meters per step
+      let moveInterval = null;
+      let currentDir = null;
+
+      function applyMove(dir) {
+        if (!modelEntity) return;
+        const pos = modelEntity.getAttribute('position') || { x: 0, y: 0, z: 0 };
+        let x = parseFloat(pos.x);
+        let y = parseFloat(pos.y);
+        let z = parseFloat(pos.z);
+
+        switch (dir) {
+          case 'up':
+            y += step; break;
+          case 'down':
+            y -= step; break;
+          case 'left':
+            x -= step; break;
+          case 'right':
+            x += step; break;
+        }
+        modelEntity.setAttribute('position', { x: x, y: y, z: z });
+      }
+
+      function startMove(dir) {
+        currentDir = dir;
+        applyMove(dir);
+        if (moveInterval) clearInterval(moveInterval);
+        moveInterval = setInterval(() => applyMove(dir), 120);
+      }
+
+      function stopMove() {
+        currentDir = null;
+        if (moveInterval) { clearInterval(moveInterval); moveInterval = null; }
+      }
+
+      moveBtns.forEach(btn => {
+        const dir = btn.dataset.dir;
+        btn.addEventListener('mousedown', (e) => { e.preventDefault(); startMove(dir); });
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove(dir); }, {passive:false});
+        btn.addEventListener('mouseup', stopMove);
+        btn.addEventListener('mouseleave', stopMove);
+        btn.addEventListener('touchend', stopMove);
+        btn.addEventListener('click', (e) => { e.preventDefault(); /* click already handled by startMove single step */ });
+      });
+    });
+  </script>
+</body>
+</html> -->
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -146,10 +332,10 @@ const marker = document.getElementById('marker');
           visible="false"></a-entity> -->
 <a-entity id="model"
           position="0 0.5 0"
-          
           scale="0.5 0.5 0.5"
           rotation="-90 0 0"
-           visible="false">
+          visible="false"
+          animation="property: rotation; to: -90 360 0; loop: true; dur: 8000; easing: linear">
 </a-entity>
  <!-- animation="property: rotation; to: -90 360 0; loop: true; dur: 8000" -->
         
