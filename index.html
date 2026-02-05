@@ -259,12 +259,12 @@ const marker = document.getElementById('marker');
           const newTouch = getTouchPos(e.touches[0]);
           const dx = newTouch.x - lastTouch.x;
           const dy = newTouch.y - lastTouch.y;
-          // Horizontal drag: rotate Y (clockwise/anticlockwise)
-          // Vertical drag: rotate X (up/down)
-          // Positive dx: anticlockwise, negative dx: clockwise (natural feel)
+          // Horizontal drag: rotate X (x round)
+          // Vertical drag: rotate Y (left/right)
+          // Positive dx: rotate X, positive dy: rotate Y
           modelEntity.setAttribute('rotation', {
-            x: lastRotation.x + dy * 0.3,
-            y: lastRotation.y - dx * 0.3,
+            x: lastRotation.x + dx * 0.3,
+            y: lastRotation.y + dy * 0.3,
             z: lastRotation.z
           });
         } else if (e.touches.length === 2 && lastDistance !== null) {
