@@ -1,6 +1,5 @@
-    <!-- Billboard Toggle Button -->
-    <button id="toggle-billboard" style="position: fixed; left: 50%; bottom: 50%; transform: translate(-50%, 50%); z-index: 40; padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; background: #28a745; color: #fff; box-shadow: 0 2px 8px #0003; cursor: pointer;">Billboard: ON</button>
-  <!-- Controls Wrapper -->
+
+     <!-- Controls Wrapper -->
   <div id="controls-wrapper" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px;">
     <button id="btn-zoom-in" style="margin-bottom: 4px; width: 110px; height: 38px; font-size: 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; box-shadow: 0 2px 6px #0002;">Zoom In</button>
     <div id="move-controls" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
@@ -212,39 +211,18 @@
       // Load the model
       modelEntity.setAttribute('gltf-model', modelUrl);
 
-      let billboardEnabled = true;
-      let billboardFrameHandler = null;
-      const toggleBillboardBtn = document.getElementById('toggle-billboard');
+      // let billboardEnabled = true;
+      // let billboardFrameHandler = null;
+      // const toggleBillboardBtn = document.getElementById('toggle-billboard');
 
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
         modelEntity.setAttribute('visible', 'true');
         instructions.textContent = '📸 Point your camera at the Blockzie marker';
 
-        // Billboard effect: make model always face camera
-        const camera = document.querySelector('a-entity[camera]');
-        function updateBillboard() {
-          if (!billboardEnabled || !camera || !modelEntity) return;
-          const camWorldPos = camera.object3D.getWorldPosition(new THREE.Vector3());
-          const modelWorldPos = modelEntity.object3D.getWorldPosition(new THREE.Vector3());
-          const lookVec = camWorldPos.clone().sub(modelWorldPos);
-          const target = modelWorldPos.clone().add(lookVec);
-          modelEntity.object3D.lookAt(target);
-        }
-        // Update every frame
-        if (!billboardFrameHandler) {
-          billboardFrameHandler = updateBillboard;
-          modelEntity.sceneEl.addEventListener('frame', billboardFrameHandler);
-        }
       });
 
-      // Toggle billboard effect on button click
-      // toggleBillboardBtn.addEventListener('click', () => {
-      //   billboardEnabled = !billboardEnabled;
-      //   toggleBillboardBtn.textContent = billboardEnabled ? 'Billboard: ON' : 'Billboard: OFF';
-      //   toggleBillboardBtn.style.background = billboardEnabled ? '#28a745' : '#dc3545';
-      // });
-
+   
       modelEntity.addEventListener('model-error', (e) => {
         console.error('❌ Error loading model:', e.detail);
         instructions.textContent = '⚠️ Failed to load model.';
