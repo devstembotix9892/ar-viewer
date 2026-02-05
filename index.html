@@ -1,7 +1,15 @@
-  <!-- Zoom Controls -->
-  <div id="zoom-controls" style="position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); z-index: 21; display: flex; flex-direction: column; align-items: center;">
-    <button id="btn-zoom-in" style="margin: 2px 0; width: 60px; height: 40px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: #fff;">Zoom In</button>
-    <button id="btn-zoom-out" style="margin: 2px 0; width: 60px; height: 40px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: #fff;">Zoom Out</button>
+  <!-- Controls Wrapper -->
+  <div id="controls-wrapper" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+    <button id="btn-zoom-in" style="margin-bottom: 4px; width: 110px; height: 38px; font-size: 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; box-shadow: 0 2px 6px #0002;">Zoom In</button>
+    <div id="move-controls" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <button id="btn-up" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; margin-bottom: 2px; box-shadow: 0 2px 6px #0002;">▲</button>
+      <div style="display: flex; flex-direction: row; gap: 8px;">
+        <button id="btn-left" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">◀</button>
+        <button id="btn-down" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">▼</button>
+        <button id="btn-right" style="width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff; box-shadow: 0 2px 6px #0002;">▶</button>
+      </div>
+    </div>
+    <button id="btn-zoom-out" style="margin-top: 4px; width: 110px; height: 38px; font-size: 16px; border-radius: 8px; border: none; background: #007bff; color: #fff; box-shadow: 0 2px 6px #0002;">Zoom Out</button>
   </div>
 <!-- 
 <!DOCTYPE html>
@@ -54,15 +62,6 @@
     <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
   </a-scene>
 
-    <!-- Movement Controls -->
-    <div id="move-controls" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center;">
-      <button id="btn-up" style="margin: 2px 0; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▲</button>
-      <div style="display: flex; flex-direction: row;">
-        <button id="btn-left" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">◀</button>
-        <button id="btn-down" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▼</button>
-        <button id="btn-right" style="margin: 0 2px; width: 50px; height: 50px; font-size: 24px; border-radius: 50%; border: none; background: #222; color: #fff;">▶</button>
-      </div>
-    </div>
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
