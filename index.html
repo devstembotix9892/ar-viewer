@@ -1,3 +1,8 @@
+  <!-- Zoom Controls -->
+  <div id="zoom-controls" style="position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); z-index: 21; display: flex; flex-direction: column; align-items: center;">
+    <button id="btn-zoom-in" style="margin: 2px 0; width: 60px; height: 40px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: #fff;">Zoom In</button>
+    <button id="btn-zoom-out" style="margin: 2px 0; width: 60px; height: 40px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: #fff;">Zoom Out</button>
+  </div>
 <!-- 
 <!DOCTYPE html>
 <html lang="en">
@@ -190,8 +195,15 @@ const marker = document.getElementById('marker');
       const btnLeft = document.getElementById('btn-left');
       const btnRight = document.getElementById('btn-right');
 
+      // Zoom controls
+      const btnZoomIn = document.getElementById('btn-zoom-in');
+      const btnZoomOut = document.getElementById('btn-zoom-out');
+
       // Move step size
       const MOVE_STEP = 0.1;
+
+      // Zoom step size (Z axis)
+      const ZOOM_STEP = 0.1;
 
       function moveModel(dx, dy) {
         if (!modelEntity) return;
@@ -204,10 +216,23 @@ const marker = document.getElementById('marker');
         });
       }
 
+      function zoomModel(dz) {
+        if (!modelEntity) return;
+        const pos = modelEntity.getAttribute('position');
+        modelEntity.setAttribute('position', {
+          x: pos.x,
+          y: pos.y,
+          z: pos.z + dz
+        });
+      }
+
       btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
       btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
       btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
       btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
+
+      btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
+      btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
 
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
