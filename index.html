@@ -243,6 +243,7 @@ const marker = document.getElementById('marker');
         return { x: touch.clientX, y: touch.clientY };
       }
 
+      let lastAngle = null;
       scene.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
           lastTouch = getTouchPos(e.touches[0]);
@@ -251,6 +252,8 @@ const marker = document.getElementById('marker');
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           lastDistance = Math.sqrt(dx * dx + dy * dy);
+          lastAngle = Math.atan2(dy, dx);
+          lastRotation = modelEntity.getAttribute('rotation');
         }
       });
 
@@ -261,19 +264,25 @@ const marker = document.getElementById('marker');
           const dy = newTouch.y - lastTouch.y;
           // Horizontal drag: rotate X (x round)
           // Vertical drag: rotate Y (left/right)
-          // Positive dx: rotate X, positive dy: rotate Y
           modelEntity.setAttribute('rotation', {
             x: lastRotation.x + dx * 0.3,
             y: lastRotation.y + dy * 0.3,
             z: lastRotation.z
           });
-        } else if (e.touches.length === 2 && lastDistance !== null) {
+        } else if (e.touches.length === 2 && lastDistance !== null && lastAngle !== null && lastRotation) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const newDistance = Math.sqrt(dx * dx + dy * dy);
           const dz = (lastDistance - newDistance) / 200; // scale factor for zoom
           zoomModel(dz);
-          lastDistance = newDistance;
+          // Z rotation (two-finger rotate)
+          const newAngle = Math.atan2(dy, dx);
+          const dAngle = (newAngle - lastAngle) * (180 / Math.PI); // radians to degrees
+          modelEntity.setAttribute('rotation', {
+            x: lastRotation.x,
+            y: lastRotation.y,
+            z: lastRotation.z + dAngle
+          });
         }
       });
 
@@ -282,6 +291,7 @@ const marker = document.getElementById('marker');
           lastTouch = null;
           lastDistance = null;
           lastRotation = null;
+          lastAngle = null;
         }
       });
 
