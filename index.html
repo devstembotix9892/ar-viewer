@@ -398,98 +398,117 @@
     });
   </script> -->
 <script>
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener("DOMContentLoaded", async () => {
+  const params = new URLSearchParams(location.search);
+  const modelUrl = params.get("url");
+  const runtimeUrl = params.get("runtime");
+  const autoplayParam = params.get("autoplay");
+  const startTimeParam = Number(params.get("startTime") || 0);
 
-const params=new URLSearchParams(location.search);
-const modelUrl=params.get('url');
-const runtimeUrl=params.get('runtime');
+  const modelEntity = document.getElementById("model");
+  const marker = document.getElementById("custom-marker");
+  const instructions = document.getElementById("instructions");
 
-const modelEntity=document.getElementById('model');
-const marker=document.getElementById('custom-marker');
-const instructions=document.getElementById('instructions');
+  if (!modelUrl) {
+    instructions.textContent = "No model URL provided.";
+    instructions.style.background = "rgba(255,0,0,0.6)";
+    return;
+  }
 
-let runtimeData=null;
-let runtimeRunner=null;
-let markerVisible=false;
+  let runtimeData = null;
+  let markerVisible = false;
+  let root = null;
+  let mixer = null;
+  let rafId = null;
+  let last = 0;
+  let actions = [];
 
-/* ---------- LOAD RUNTIME ---------- */
-if(runtimeUrl){
- fetch(runtimeUrl)
-  .then(r=>r.json())
-  .then(d=>runtimeData=d);
-}
+  if (runtimeUrl) {
+    try {
+      runtimeData = await fetch(runtimeUrl).then((r) => r.json());
+    } catch (e) {
+      console.warn("runtime load failed", e);
+    }
+  }
 
-/* ---------- SCRIPT RUNNER ---------- */
-function createRunner(modelRoot){
+  function applySnapshot(sceneRoot) {
+    if (!runtimeData?.objects?.length) return;
+    runtimeData.objects.forEach((o) => {
+      const obj = sceneRoot.getObjectByProperty("uuid", o.uuid);
+      if (!obj) return;
+      if (o.position) obj.position.fromArray(o.position);
+      if (o.rotation) obj.rotation.fromArray(o.rotation);
+      if (o.scale) obj.scale.fromArray(o.scale);
+    });
+  }
 
- let running=false;
- let prev=0;
+  function stopLoop() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    last = 0;
+  }
 
- function loop(t){
-  if(!running)return;
-  const delta=prev?(t-prev):0;
-  prev=t;
-  modelRoot.traverse(o=>{
-     if(o.userData?.update)
-        o.userData.update({time:t,delta});
+  function startLoop() {
+    if (rafId || !mixer) return;
+    const loop = (t) => {
+      if (!markerVisible) {
+        stopLoop();
+        return;
+      }
+      const dt = last ? (t - last) / 1000 : 0;
+      last = t;
+      mixer.update(dt);
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function startAnimations() {
+    if (!root || !root.animations || !root.animations.length) return;
+    const shouldPlay = autoplayParam === "1" || runtimeData?.playing === true;
+    if (!shouldPlay) return;
+
+    mixer = new THREE.AnimationMixer(root);
+    actions = root.animations.map((clip) => mixer.clipAction(clip));
+
+    const startAt = runtimeData?.time || startTimeParam || 0;
+    actions.forEach((a) => {
+      a.reset();
+      a.play();
+      if (startAt > 0) a.time = startAt;
+    });
+
+    if (markerVisible) startLoop();
+  }
+
+  modelEntity.setAttribute("gltf-model", modelUrl);
+
+  modelEntity.addEventListener("model-loaded", (e) => {
+    root = e.detail.model;
+    applySnapshot(root);
+    startAnimations();
+
+    modelEntity.setAttribute("visible", true);
+    instructions.textContent = "Point camera to marker";
   });
-  requestAnimationFrame(loop);
- }
 
- return{
-  start(){
-    if(running)return;
-    running=true;
-    requestAnimationFrame(loop);
-  },
-  stop(){ running=false;}
- };
-}
+  modelEntity.addEventListener("model-error", () => {
+    instructions.textContent = "Failed to load model.";
+    instructions.style.background = "rgba(255,0,0,0.6)";
+  });
 
-/* ---------- LOAD MODEL ---------- */
-modelEntity.setAttribute("gltf-model",modelUrl);
+  marker.addEventListener("markerFound", () => {
+    markerVisible = true;
+    if (mixer) startLoop();
+  });
 
-modelEntity.addEventListener("model-loaded",(e)=>{
-
- const root=e.detail.model;
- modelEntity.setAttribute("visible",true);
- instructions.innerText="Point camera to marker";
-
-/* ---- APPLY SNAPSHOT FIRST ---- */
- if(runtimeData){
-   runtimeData.objects.forEach(o=>{
-     const obj=root.getObjectByProperty("uuid",o.uuid);
-     if(obj){
-       obj.position.fromArray(o.position);
-       obj.rotation.fromArray(o.rotation);
-       obj.scale.fromArray(o.scale);
-     }
-   });
- }
-
-/* ---- CREATE PLAYER ---- */
- runtimeRunner=createRunner(root);
-
-/* ---- START IF PLAYING ---- */
- if(runtimeData?.playing && markerVisible)
-     runtimeRunner.start();
-
-});
-
-/* ---------- MARKER EVENTS ---------- */
-marker.addEventListener("markerFound",()=>{
- markerVisible=true;
- if(runtimeRunner && runtimeData?.playing)
-     runtimeRunner.start();
-});
-
-marker.addEventListener("markerLost",()=>{
- markerVisible=false;
- runtimeRunner?.stop();
-});
-
+  marker.addEventListener("markerLost", () => {
+    markerVisible = false;
+    stopLoop();
+  });
 });
 </script>
+
 
 </body>
 </html>
