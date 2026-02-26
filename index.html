@@ -403,19 +403,22 @@ marker.addEventListener("markerFound", () => {
   const cam = document.querySelector("[camera]").object3D;
   const model = modelEntity.object3D;
 
-  // world matrices
   cam.updateMatrixWorld();
   model.updateMatrixWorld();
 
-  // offset = inverse(camera) * model
+  // save offset
   offsetMatrix.multiplyMatrices(
     new THREE.Matrix4().copy(cam.matrixWorld).invert(),
     model.matrixWorld
   );
 
+  // ⭐ detach model from marker
+  document.querySelector("a-scene").object3D.add(model);
+
   placed = true;
   instructions.textContent = "✅ Model placed. Move phone freely.";
 });
+
 
 scene.addEventListener("renderstart", () => {
 
