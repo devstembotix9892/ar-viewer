@@ -225,12 +225,6 @@
       <button id="btn-zoom-out" class="glass-btn round-btn zoom-side-btn" title="Zoom Out">-</button>
     </div>
   </div>
-  <div id="screen-controls" style="position:fixed;right:12px;bottom:12px;z-index:40;display:flex;gap:8px;">
-    <button id="btn-start-screen" class="glass-btn" style="min-width:140px;height:40px;">Start Screen</button>
-    <button id="btn-stop-screen" class="glass-btn" style="min-width:140px;height:40px;" disabled>Stop Screen</button>
-  </div>
-  <video id="screen-preview" autoplay playsinline muted
-    style="position:fixed;right:12px;top:12px;width:320px;max-width:45vw;border-radius:12px;border:2px solid rgba(255,255,255,0.35);z-index:35;background:#000;display:none;"></video>
   
 <a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
   <!-- <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;"> -->
@@ -276,10 +270,6 @@
       // Zoom controls
       const btnZoomIn = document.getElementById('btn-zoom-in');
       const btnZoomOut = document.getElementById('btn-zoom-out');
-      const btnStartScreen = document.getElementById('btn-start-screen');
-      const btnStopScreen = document.getElementById('btn-stop-screen');
-      const screenPreview = document.getElementById('screen-preview');
-      let screenStream = null;
 
       // Move step size
       const MOVE_STEP = 0.1;
@@ -315,51 +305,6 @@
 
       if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
       if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
-
-      async function startScreenStream() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-          instructions.textContent = 'Screen sharing is not supported in this browser.';
-          instructions.style.background = 'rgba(255, 0, 0, 0.6)';
-          return;
-        }
-        try {
-          screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: false
-          });
-          screenPreview.srcObject = screenStream;
-          screenPreview.style.display = 'block';
-          btnStartScreen.disabled = true;
-          btnStopScreen.disabled = false;
-          instructions.textContent = 'Screen live stream started.';
-
-          const [track] = screenStream.getVideoTracks();
-          if (track) {
-            track.addEventListener('ended', () => stopScreenStream(true));
-          }
-        } catch (err) {
-          instructions.textContent = 'Screen share cancelled or blocked.';
-          instructions.style.background = 'rgba(255, 140, 0, 0.65)';
-          console.error('Screen share error:', err);
-        }
-      }
-
-      function stopScreenStream(fromSystemEvent = false) {
-        if (screenStream) {
-          screenStream.getTracks().forEach((track) => track.stop());
-          screenStream = null;
-        }
-        screenPreview.srcObject = null;
-        screenPreview.style.display = 'none';
-        btnStartScreen.disabled = false;
-        btnStopScreen.disabled = true;
-        if (fromSystemEvent) {
-          instructions.textContent = 'Screen live stream stopped.';
-        }
-      }
-
-      if (btnStartScreen) btnStartScreen.addEventListener('click', startScreenStream);
-      if (btnStopScreen) btnStopScreen.addEventListener('click', () => stopScreenStream(false));
 
       // Touch gesture support for model rotation (orbit) and zoom
       let lastTouch = null;
