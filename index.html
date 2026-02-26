@@ -397,7 +397,9 @@
       // marker.addEventListener('markerLost', () => {
       //   console.log('🚫 Marker lost');
       // });
-      let locked = false;
+     
+    });
+let locked = false;
 
 marker.addEventListener("markerFound", () => {
 
@@ -407,8 +409,6 @@ marker.addEventListener("markerFound", () => {
 
   setTimeout(() => {
 
-    const scene = document.getElementById("scene");
-
     const worldPos = new THREE.Vector3();
     const worldQuat = new THREE.Quaternion();
     const worldScale = new THREE.Vector3();
@@ -417,7 +417,9 @@ marker.addEventListener("markerFound", () => {
     modelEntity.object3D.getWorldQuaternion(worldQuat);
     modelEntity.object3D.getWorldScale(worldScale);
 
-    // detach from marker
+    const scene = document.getElementById("scene");
+
+    // detach model from marker
     scene.appendChild(modelEntity);
 
     // apply world transform
@@ -425,19 +427,16 @@ marker.addEventListener("markerFound", () => {
     modelEntity.object3D.quaternion.copy(worldQuat);
     modelEntity.object3D.scale.copy(worldScale);
 
-    // disable marker
-    marker.setAttribute("visible", false);
-    marker.object3D.visible = false;
+    // IMPORTANT — hide marker visually but keep tracking
+    marker.setAttribute("material","opacity:0; transparent:true;");
 
     locked = true;
 
     instructions.textContent = "✅ Model placed. Move phone freely.";
 
-  }, 1500);
+  }, 1200);
 
 });
-    });
-
     
   </script>
 
