@@ -210,6 +210,7 @@
         <button id="btn-down" class="glass-btn round-btn">&darr;</button>
         <button id="btn-right" class="glass-btn round-btn">&rarr;</button>
       </div>
+      <button id="btn-center" class="glass-btn">Center</button>
     </div>
     <div class="side-zoom-btn">
       <button id="btn-zoom-out" class="glass-btn round-btn zoom-side-btn" title="Zoom Out">-</button>
@@ -256,6 +257,7 @@
       const btnDown = document.getElementById('btn-down');
       const btnLeft = document.getElementById('btn-left');
       const btnRight = document.getElementById('btn-right');
+      const btnCenter = document.getElementById('btn-center');
 
       // Zoom controls
       const btnZoomIn = document.getElementById('btn-zoom-in');
@@ -266,6 +268,7 @@
 
       // Zoom step size (Z axis)
       const ZOOM_STEP = 0.1;
+      let centerPosition = { x: 0, y: 0.5, z: 0 };
 
       function moveModel(dx, dy) {
         if (!modelEntity) return;
@@ -288,10 +291,16 @@
         });
       }
 
+      function centerModel() {
+        if (!modelEntity) return;
+        modelEntity.setAttribute('position', centerPosition);
+      }
+
       if (btnUp) btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
       if (btnDown) btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
       if (btnLeft) btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
       if (btnRight) btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
+      if (btnCenter) btnCenter.addEventListener('click', centerModel);
 
       if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
       if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
@@ -426,6 +435,7 @@
         modelEntity.setAttribute('scale', '0.18 0.18 0.18');
         modelEntity.setAttribute('rotation', '0 90 0');
         modelEntity.setAttribute('visible', 'true');
+        centerPosition = { x: 0, y: -0.10, z: -2.4 };
 
   // ⭐ detach model from marker
         marker.object3D.visible = false;
