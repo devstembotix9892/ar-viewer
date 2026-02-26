@@ -2,7 +2,7 @@
 
   <!-- Controls Wrapper -->
 
-  <div id="controls-wrapper" class="glass-controls new-controls-layout">
+  <!-- <div id="controls-wrapper" class="glass-controls new-controls-layout">
     <div class="side-zoom-btn">
       <button id="btn-zoom-in" class="glass-btn round-btn zoom-side-btn" title="Zoom In">＋</button>
     </div>
@@ -17,7 +17,7 @@
     <div class="side-zoom-btn">
       <button id="btn-zoom-out" class="glass-btn round-btn zoom-side-btn" title="Zoom Out">－</button>
     </div>
-  </div>
+  </div> -->
 
 
 
@@ -217,12 +217,7 @@
     <!-- <a-marker preset="hiro" id="hiro-marker"> -->
       <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
 
-      <!-- <a-entity id="model" position="0 0 0" scale="1 1 1" rotation="0 0 0" visible="false"></a-entity> -->
-      <!-- <a-entity id="model" 
-          position="0 0.5 0" 
-          scale="0.5 0.5 0.5" 
-          rotation="-90 0 0" 
-          visible="false"></a-entity> -->
+    >
 <a-entity id="model"
           position="0 0.5 0"
           
@@ -398,45 +393,59 @@
       //   console.log('🚫 Marker lost');
       // });
      
-    });
-let locked = false;
+      let placed = false;
+let offsetMatrix = new THREE.Matrix4();
 
 marker.addEventListener("markerFound", () => {
 
-  if (locked) return;
+  if (placed) return;
 
-  console.log("📍 Marker detected");
+  const cam = document.querySelector("[camera]").object3D;
+  const model = modelEntity.object3D;
 
-  setTimeout(() => {
+  // world matrices
+  cam.updateMatrixWorld();
+  model.updateMatrixWorld();
 
-    const worldPos = new THREE.Vector3();
-    const worldQuat = new THREE.Quaternion();
-    const worldScale = new THREE.Vector3();
+  // offset = inverse(camera) * model
+  offsetMatrix.multiplyMatrices(
+    new THREE.Matrix4().copy(cam.matrixWorld).invert(),
+    model.matrixWorld
+  );
 
-    modelEntity.object3D.getWorldPosition(worldPos);
-    modelEntity.object3D.getWorldQuaternion(worldQuat);
-    modelEntity.object3D.getWorldScale(worldScale);
+  placed = true;
+  instructions.textContent = "✅ Model placed. Move phone freely.";
+});
 
-    const scene = document.getElementById("scene");
+scene.addEventListener("renderstart", () => {
 
-    // detach model from marker
-    scene.appendChild(modelEntity);
+  scene.addEventListener("tick", () => {
 
-    // apply world transform
-    modelEntity.object3D.position.copy(worldPos);
-    modelEntity.object3D.quaternion.copy(worldQuat);
-    modelEntity.object3D.scale.copy(worldScale);
+    if (!placed) return;
 
-    // IMPORTANT — hide marker visually but keep tracking
-    marker.setAttribute("material","opacity:0; transparent:true;");
+    const cam = document.querySelector("[camera]").object3D;
+    const model = modelEntity.object3D;
 
-    locked = true;
+    cam.updateMatrixWorld();
 
-    instructions.textContent = "✅ Model placed. Move phone freely.";
+    // new world = camera * saved offset
+    const newWorld = new THREE.Matrix4().multiplyMatrices(
+      cam.matrixWorld,
+      offsetMatrix
+    );
 
-  }, 1200);
+    model.matrix.copy(newWorld);
+    model.matrix.decompose(
+      model.position,
+      model.quaternion,
+      model.scale
+    );
+  });
 
 });
+
+    });
+
     
   </script>
 
