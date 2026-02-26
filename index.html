@@ -236,7 +236,7 @@
           position="0 0.5 0"
           
           scale="0.5 0.5 0.5"
-          rotation="-90 0 0"
+          rotation="0 180 0"
            visible="false">
 </a-entity>
  <!-- animation="property: rotation; to: -90 360 0; loop: true; dur: 8000" -->
@@ -420,6 +420,7 @@
         cameraObj.add(modelObj);
         modelEntity.setAttribute('position', '0 -0.15 -1.4');
         modelEntity.setAttribute('scale', '0.4 0.4 0.4');
+        modelEntity.setAttribute('rotation', '0 180 0');
         modelEntity.setAttribute('visible', 'true');
 
   // ⭐ detach model from marker
