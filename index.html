@@ -240,6 +240,7 @@
   </a-scene>
 
   <script>
+    
     window.addEventListener('DOMContentLoaded', () => {
       console.log('📄 DOM fully loaded, initializing AR scene...');
       
@@ -388,14 +389,54 @@
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
-      marker.addEventListener('markerFound', () => {
-        console.log('📍 Marker found');
-      });
+      let locked = false;
 
-      marker.addEventListener('markerLost', () => {
-        console.log('🚫 Marker lost');
-      });
-    });
+marker.addEventListener('markerFound', () => {
+  console.log('📍 Marker found');
+
+  if (!locked) {
+    setTimeout(() => {
+
+      const worldPos = new THREE.Vector3();
+      modelEntity.object3D.getWorldPosition(worldPos);
+
+      const worldQuat = new THREE.Quaternion();
+      modelEntity.object3D.getWorldQuaternion(worldQuat);
+
+      // detach model from marker
+      document.querySelector('a-scene').appendChild(modelEntity);
+
+      // apply world transform
+      modelEntity.object3D.position.copy(worldPos);
+      modelEntity.object3D.quaternion.copy(worldQuat);
+
+      // disable marker tracking
+      marker.setAttribute("visible", false);
+
+      locked = true;
+
+      instructions.textContent = "✅ Model placed in real world";
+
+      console.log("🔒 Model locked in world space");
+
+    }, 700);
+  }
+});
+
+marker.addEventListener('markerLost', () => {
+  console.log('🚫 Marker lost');
+});
+
+    //   marker.addEventListener('markerFound', () => {
+    //     console.log('📍 Marker found');
+    //   });
+
+    //   marker.addEventListener('markerLost', () => {
+    //     console.log('🚫 Marker lost');
+    //   });
+    // });
+
+    
   </script>
 
 
