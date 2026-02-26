@@ -209,8 +209,9 @@
 </head>
 <body>
   <div id="instructions">⏳ Loading AR Viewer...</div>
-
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  
+<a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <!-- <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;"> -->
     <a-assets id="assets"></a-assets>
 
     <!-- <a-marker preset="hiro" id="hiro-marker"> -->
@@ -389,13 +390,52 @@
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
-      marker.addEventListener('markerFound', () => {
-        console.log('📍 Marker found');
-      });
+      // marker.addEventListener('markerFound', () => {
+      //   console.log('📍 Marker found');
+      // });
 
-      marker.addEventListener('markerLost', () => {
-        console.log('🚫 Marker lost');
-      });
+      // marker.addEventListener('markerLost', () => {
+      //   console.log('🚫 Marker lost');
+      // });
+      let locked = false;
+
+marker.addEventListener("markerFound", () => {
+
+  if (locked) return;
+
+  console.log("📍 Marker detected");
+
+  setTimeout(() => {
+
+    const scene = document.getElementById("scene");
+
+    const worldPos = new THREE.Vector3();
+    const worldQuat = new THREE.Quaternion();
+    const worldScale = new THREE.Vector3();
+
+    modelEntity.object3D.getWorldPosition(worldPos);
+    modelEntity.object3D.getWorldQuaternion(worldQuat);
+    modelEntity.object3D.getWorldScale(worldScale);
+
+    // detach from marker
+    scene.appendChild(modelEntity);
+
+    // apply world transform
+    modelEntity.object3D.position.copy(worldPos);
+    modelEntity.object3D.quaternion.copy(worldQuat);
+    modelEntity.object3D.scale.copy(worldScale);
+
+    // disable marker
+    marker.setAttribute("visible", false);
+    marker.object3D.visible = false;
+
+    locked = true;
+
+    instructions.textContent = "✅ Model placed. Move phone freely.";
+
+  }, 800);
+
+});
     });
 
     
