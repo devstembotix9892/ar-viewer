@@ -216,8 +216,6 @@
 
     <!-- <a-marker preset="hiro" id="hiro-marker"> -->
       <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
-
-    >
 <a-entity id="model"
           position="0 0.5 0"
           
@@ -284,13 +282,13 @@
         });
       }
 
-      btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
-      btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
-      btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
-      btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
+      if (btnUp) btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
+      if (btnDown) btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
+      if (btnLeft) btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
+      if (btnRight) btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
 
-      btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
-      btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
+      if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
+      if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
 
       // Touch gesture support for model rotation (orbit) and zoom
       let lastTouch = null;
@@ -394,58 +392,49 @@
       // });
      
       let placed = false;
-let offsetMatrix = new THREE.Matrix4();
+      const offsetMatrix = new THREE.Matrix4();
+      const tempMatrix = new THREE.Matrix4();
+      const cameraObj = document.querySelector('[camera]').object3D;
 
-marker.addEventListener("markerFound", () => {
+      marker.addEventListener('markerFound', () => {
 
   if (placed) return;
 
-  const cam = document.querySelector("[camera]").object3D;
-  const model = modelEntity.object3D;
+        const modelObj = modelEntity.object3D;
 
-  cam.updateMatrixWorld();
-  model.updateMatrixWorld();
+        cameraObj.updateMatrixWorld(true);
+        modelObj.updateMatrixWorld(true);
 
-  // save offset
-  offsetMatrix.multiplyMatrices(
-    new THREE.Matrix4().copy(cam.matrixWorld).invert(),
-    model.matrixWorld
-  );
+        // Save offset once so marker is no longer required after first detection.
+        offsetMatrix.multiplyMatrices(
+          tempMatrix.copy(cameraObj.matrixWorld).invert(),
+          modelObj.matrixWorld
+        );
 
   // ⭐ detach model from marker
-  document.querySelector("a-scene").object3D.add(model);
+        scene.object3D.add(modelObj);
+        modelObj.visible = true;
+        marker.object3D.visible = false;
 
-  placed = true;
-  instructions.textContent = "✅ Model placed. Move phone freely.";
+        placed = true;
+        instructions.textContent = 'Model placed. Pattern no longer required until restart.';
 });
 
 
-scene.addEventListener("renderstart", () => {
+      function updatePlacedModel() {
+        if (placed) {
+          const modelObj = modelEntity.object3D;
+          cameraObj.updateMatrixWorld(true);
 
-  scene.addEventListener("tick", () => {
+          tempMatrix.multiplyMatrices(cameraObj.matrixWorld, offsetMatrix);
+          tempMatrix.decompose(modelObj.position, modelObj.quaternion, modelObj.scale);
+          modelObj.visible = true;
+        }
 
-    if (!placed) return;
+        requestAnimationFrame(updatePlacedModel);
+      }
 
-    const cam = document.querySelector("[camera]").object3D;
-    const model = modelEntity.object3D;
-
-    cam.updateMatrixWorld();
-
-    // new world = camera * saved offset
-    const newWorld = new THREE.Matrix4().multiplyMatrices(
-      cam.matrixWorld,
-      offsetMatrix
-    );
-
-    model.matrix.copy(newWorld);
-    model.matrix.decompose(
-      model.position,
-      model.quaternion,
-      model.scale
-    );
-  });
-
-});
+      updatePlacedModel();
 
     });
 
