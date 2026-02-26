@@ -208,7 +208,23 @@
   </style>
 </head>
 <body>
-  <div id="instructions">⏳ Loading AR Viewer...</div>
+  <div id="instructions">Loading AR Viewer...</div>
+  <div id="controls-wrapper" class="glass-controls new-controls-layout">
+    <div class="side-zoom-btn">
+      <button id="btn-zoom-in" class="glass-btn round-btn zoom-side-btn" title="Zoom In">+</button>
+    </div>
+    <div id="move-controls" class="move-controls">
+      <button id="btn-up" class="glass-btn round-btn">&uarr;</button>
+      <div class="move-row">
+        <button id="btn-left" class="glass-btn round-btn">&larr;</button>
+        <button id="btn-down" class="glass-btn round-btn">&darr;</button>
+        <button id="btn-right" class="glass-btn round-btn">&rarr;</button>
+      </div>
+    </div>
+    <div class="side-zoom-btn">
+      <button id="btn-zoom-out" class="glass-btn round-btn zoom-side-btn" title="Zoom Out">-</button>
+    </div>
+  </div>
   
 <a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
   <!-- <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;"> -->
@@ -371,7 +387,7 @@
 
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
-        modelEntity.setAttribute('visible', 'true');
+        modelEntity.setAttribute('visible', 'false');
         instructions.textContent = '📸 Point your camera at the Blockzie marker';
 
       });
@@ -392,8 +408,6 @@
       // });
      
       let placed = false;
-      const offsetMatrix = new THREE.Matrix4();
-      const tempMatrix = new THREE.Matrix4();
       const cameraObj = document.querySelector('[camera]').object3D;
 
       marker.addEventListener('markerFound', () => {
@@ -402,40 +416,18 @@
 
         const modelObj = modelEntity.object3D;
 
-        cameraObj.updateMatrixWorld(true);
-        modelObj.updateMatrixWorld(true);
-
-        // Save offset once so marker is no longer required after first detection.
-        offsetMatrix.multiplyMatrices(
-          tempMatrix.copy(cameraObj.matrixWorld).invert(),
-          modelObj.matrixWorld
-        );
+        // Attach once to camera so it stays visible without pattern.
+        cameraObj.add(modelObj);
+        modelEntity.setAttribute('position', '0 -0.15 -1.4');
+        modelEntity.setAttribute('scale', '0.4 0.4 0.4');
+        modelEntity.setAttribute('visible', 'true');
 
   // ⭐ detach model from marker
-        scene.object3D.add(modelObj);
-        modelObj.visible = true;
         marker.object3D.visible = false;
 
         placed = true;
         instructions.textContent = 'Model placed. Pattern no longer required until restart.';
 });
-
-
-      function updatePlacedModel() {
-        if (placed) {
-          const modelObj = modelEntity.object3D;
-          cameraObj.updateMatrixWorld(true);
-
-          tempMatrix.multiplyMatrices(cameraObj.matrixWorld, offsetMatrix);
-          tempMatrix.decompose(modelObj.position, modelObj.quaternion, modelObj.scale);
-          modelObj.visible = true;
-        }
-
-        requestAnimationFrame(updatePlacedModel);
-      }
-
-      updatePlacedModel();
-
     });
 
     
@@ -444,3 +436,4 @@
 
 </body>
 </html>
+
