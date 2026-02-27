@@ -64,6 +64,7 @@
       flex-direction: row;
       align-items: center;
       gap: var(--controls-gap);
+      /* background: rgba(255,255,255,0.10); */
       border-radius: 22px;
       box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
       padding: 9px 5px;
@@ -170,61 +171,6 @@
       box-shadow: 0 6px 18px #007bff44;
       transform: scale(1.08);
     }
-    /* Animation controls */
-    .animation-controls {
-      position: fixed;
-      top: max(70px, calc(env(safe-area-inset-top) + 60px));
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 30;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 8px 16px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .animation-label {
-      color: #fff;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .animation-select {
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      outline: none;
-    }
-    .animation-select option {
-      background: #333;
-      color: #fff;
-    }
-    .anim-btn {
-      font-size: 18px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .anim-btn:hover {
-      background: rgba(0,123,255,0.5);
-    }
-    .anim-btn.active {
-      background: linear-gradient(135deg, #007bff 0%, #00c6ff 100%);
-    }
     @media (max-width: 600px) {
       .glass-controls {
         padding: 10px;
@@ -249,40 +195,11 @@
         font-size: 14px;
         padding: 10px 12px;
       }
-      .animation-controls {
-        top: max(60px, calc(env(safe-area-inset-top) + 50px));
-        padding: 6px 12px;
-        gap: 6px;
-      }
-      .animation-label {
-        font-size: 12px;
-      }
-      .animation-select {
-        font-size: 12px;
-        padding: 4px 8px;
-      }
-      .anim-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-      }
     }
   </style>
 </head>
 <body>
   <div id="instructions">Loading AR Viewer...</div>
-  
-  <!-- Animation Controls UI -->
-  <div id="animation-controls" class="animation-controls" style="display: none;">
-    <span class="animation-label">Animation:</span>
-    <select id="animation-select" class="animation-select">
-      <option value="">Select Animation</option>
-    </select>
-    <button id="btn-play" class="anim-btn" title="Play">▶</button>
-    <button id="btn-pause" class="anim-btn" title="Pause">⏸</button>
-    <button id="btn-stop" class="anim-btn" title="Stop">⏹</button>
-  </div>
-
   <div id="controls-wrapper" class="glass-controls new-controls-layout">
     <div class="side-zoom-btn">
       <button id="btn-zoom-in" class="glass-btn round-btn zoom-side-btn" title="Zoom In">+</button>
@@ -301,290 +218,39 @@
     </div>
   </div>
   
-  <a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+<a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <!-- <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;"> -->
     <a-assets id="assets"></a-assets>
-    <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
-      <a-entity id="model"
-                position="0 0.10 0"
-                scale="0.25 0.18 0.18"
-                rotation="0 90 0"
-                visible="false">
-      </a-entity>
+
+    <!-- <a-marker preset="hiro" id="hiro-marker"> -->
+      <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
+<a-entity id="model"
+          position="0 0.10 0"
+          
+          scale="0.25 0.18 0.18"
+          rotation="0 90 0"
+           visible="false">
+</a-entity>
+ <!-- animation="property: rotation; to: -90 360 0; loop: true; dur: 8000" -->
+        
     </a-marker>
+
     <a-entity camera></a-entity>
+     
     <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
     <a-light type="directional" position="1 1 0.5" intensity="1"></a-light>
   </a-scene>
 
-    // ============================================================
-    // ANIMATION MIXER SYSTEM - Handles GLTF animations in AR
-    // ============================================================
-    class AnimationController {
-      constructor(modelEntity) {
-        this.modelEntity = modelEntity;
-        this.mixer = null;
-        this.actions = {};
-        this.currentAction = null;
-        this.clock = new THREE.Clock();
-        this.animationMixer = null;
-        
-        // Parse URL parameters
-        this.urlParams = new URLSearchParams(window.location.search);
-        this.autoplay = this.urlParams.get('autoplay') === '1' || this.urlParams.get('autoplay') === 'true';
-        this.loop = this.urlParams.get('loop') !== '0' && this.urlParams.get('loop') !== 'false';
-        this.animationName = this.urlParams.get('animation') || this.urlParams.get('animationName') || null;
-        
-        console.log('🎬 Animation params:', { 
-          autoplay: this.autoplay, 
-          loop: this.loop, 
-          animationName: this.animationName 
-        });
-        
-        this.setupAnimationLoop();
-      }
-      
-      setupAnimationLoop() {
-        const scene = document.querySelector('a-scene');
-        if (!scene) return;
-        
-        // Hook into A-Frame's animation system
-        scene.addEventListener('loaded', () => {
-          // A-Frame uses its own render loop, so we hook into it
-          const renderer = scene.renderer;
-          if (renderer && renderer.setAnimationLoop) {
-            // Store original animation loop
-            const originalLoop = renderer.setAnimationLoop.bind(renderer);
-            
-            // Override to update our mixer
-            renderer.setAnimationLoop = (callback) => {
-              originalLoop((time) => {
-                const delta = this.clock.getDelta();
-                if (this.animationMixer) {
-                  this.animationMixer.update(delta);
-                }
-                if (callback) callback(time);
-              });
-            };
-          }
-        });
-      }
-      
-      // Set up animations with the model object
-      setupWithModelObject(modelObj) {
-        if (!modelObj) {
-          console.warn('⚠️ Model object not provided');
-          return;
-        }
-        
-        console.log('🎬 Setting up animations with model object...');
-        
-        // Create animation mixer for the model
-        this.animationMixer = new THREE.AnimationMixer(modelObj);
-        
-        // Collect all animations from the model and its children
-        const animations = [];
-        const seen = new Set();
-        
-        modelObj.traverse((child) => {
-          if (child.animations && Array.isArray(child.animations)) {
-            child.animations.forEach((clip) => {
-              const key = clip.name || clip.uuid;
-              if (!seen.has(key)) {
-                seen.add(key);
-                animations.push(clip);
-                console.log(`🎬 Found animation: "${clip.name}" on ${child.type} "${child.name}"`);
-              }
-            });
-          }
-        });
-        
-        console.log(`🎬 Total unique animations found: ${animations.length}`);
-        
-        if (animations.length === 0) {
-          console.log('⚠️ No animations found in the model');
-          this.hideAnimationControls();
-          return;
-        }
-        
-        // Create actions for all animations
-        animations.forEach((clip, index) => {
-          const action = this.animationMixer.clipAction(clip);
-          this.actions[clip.name || `animation_${index}`] = action;
-          console.log(`🎬 Registered animation: "${clip.name}" (duration: ${clip.duration.toFixed(2)}s)`);
-        });
-        
-        // Show animation controls
-        this.showAnimationControls(animations);
-        
-        // Auto-play if requested
-        if (this.autoplay) {
-          this.playFirstAnimation();
-        }
-      }
-      
-      showAnimationControls(animations) {
-        const controlsDiv = document.getElementById('animation-controls');
-        const select = document.getElementById('animation-select');
-        
-        if (!controlsDiv || !select) return;
-        
-        // Clear existing options
-        select.innerHTML = '<option value="">Select Animation</option>';
-        
-        // Add animation options
-        animations.forEach((clip, index) => {
-          const option = document.createElement('option');
-          option.value = clip.name || `animation_${index}`;
-          option.textContent = clip.name || `Animation ${index + 1}`;
-          select.appendChild(option);
-        });
-        
-        // Show controls
-        controlsDiv.style.display = 'flex';
-        
-        // If specific animation requested, select it
-        if (this.animationName) {
-          select.value = this.animationName;
-          if (select.value !== this.animationName) {
-            // Try to find partial match
-            for (let opt of select.options) {
-              if (opt.value.toLowerCase().includes(this.animationName.toLowerCase())) {
-                select.value = opt.value;
-                break;
-              }
-            }
-          }
-        }
-        
-        console.log('✅ Animation controls shown');
-      }
-      
-      hideAnimationControls() {
-        const controlsDiv = document.getElementById('animation-controls');
-        if (controlsDiv) {
-          controlsDiv.style.display = 'none';
-        }
-      }
-      
-      playFirstAnimation() {
-        const animSelect = document.getElementById('animation-select');
-        if (animSelect && animSelect.options.length > 1) {
-          // Select first animation if none specified
-          const firstAnim = this.animationName || animSelect.options[1].value;
-          this.playAnimation(firstAnim);
-        }
-      }
-      
-      playAnimation(name) {
-        if (!this.animationMixer) {
-          console.warn('⚠️ AnimationMixer not initialized');
-          return;
-        }
-        
-        // Try to find the animation clip
-        let clip = null;
-        
-        // Search in actions first
-        if (this.actions[name]) {
-          clip = this.actions[name].getClip();
-        }
-        
-        // If not found, search in all clips
-        if (!clip) {
-          for (const actionName in this.actions) {
-            const actionClip = this.actions[actionName].getClip();
-            if (actionClip && (actionClip.name === name || actionName === name)) {
-              clip = actionClip;
-              name = actionName;
-              break;
-            }
-          }
-        }
-        
-        if (!clip) {
-          console.warn(`⚠️ Animation "${name}" not found`);
-          return;
-        }
-        
-        // Stop current action
-        if (this.currentAction) {
-          this.currentAction.stop();
-        }
-        
-        // Get or create action
-        let newAction = this.actions[name];
-        if (!newAction) {
-          newAction = this.animationMixer.clipAction(clip);
-          this.actions[name] = newAction;
-        }
-        
-        newAction.reset();
-        newAction.setLoop(this.loop ? THREE.LoopRepeat : THREE.LoopOnce);
-        newAction.clampWhenFinished = !this.loop;
-        newAction.play();
-        
-        this.currentAction = newAction;
-        
-        // Update UI
-        const playBtn = document.getElementById('btn-play');
-        const pauseBtn = document.getElementById('btn-pause');
-        if (playBtn) playBtn.classList.add('active');
-        if (pauseBtn) pauseBtn.classList.remove('active');
-        
-        console.log(`▶️ Playing animation: "${name}" (loop: ${this.loop})`);
-      }
-      
-      pauseAnimation() {
-        if (this.animationMixer) {
-          this.animationMixer.timeScale = 0;
-          
-          const playBtn = document.getElementById('btn-play');
-          const pauseBtn = document.getElementById('btn-pause');
-          if (playBtn) playBtn.classList.remove('active');
-          if (pauseBtn) pauseBtn.classList.add('active');
-          
-          console.log('⏸️ Animation paused');
-        }
-      }
-      
-      resumeAnimation() {
-        if (this.animationMixer) {
-          this.animationMixer.timeScale = 1;
-          
-          const playBtn = document.getElementById('btn-play');
-          const pauseBtn = document.getElementById('btn-pause');
-          if (playBtn) playBtn.classList.add('active');
-          if (pauseBtn) pauseBtn.classList.remove('active');
-          
-          console.log('▶️ Animation resumed');
-        }
-      }
-      
-      stopAnimation() {
-        if (this.currentAction) {
-          this.currentAction.stop();
-          this.currentAction.reset();
-        }
-        
-        const playBtn = document.getElementById('btn-play');
-        const pauseBtn = document.getElementById('btn-pause');
-        if (playBtn) playBtn.classList.remove('active');
-        if (pauseBtn) pauseBtn.classList.remove('active');
-        
-        console.log('⏹️ Animation stopped');
-      }
-    }
-
-    // ============================================================
-    // MAIN AR VIEWER LOGIC
-    // ============================================================
+  <script>
+    
     window.addEventListener('DOMContentLoaded', () => {
       console.log('📄 DOM fully loaded, initializing AR scene...');
       
-      // Get URL parameters
       const modelUrl = new URLSearchParams(window.location.search).get('url');
       const modelEntity = document.getElementById('model');
+      // const marker = document.getElementById('hiro-marker');
       const marker = document.getElementById('custom-marker');
+
       const instructions = document.getElementById('instructions');
 
       // Movement controls
@@ -598,23 +264,17 @@
       const btnZoomIn = document.getElementById('btn-zoom-in');
       const btnZoomOut = document.getElementById('btn-zoom-out');
 
-      // Animation controls
-      const animSelect = document.getElementById('animation-select');
-      const btnPlay = document.getElementById('btn-play');
-      const btnPause = document.getElementById('btn-pause');
-      const btnStop = document.getElementById('btn-stop');
-
       // Move step size
       const MOVE_STEP = 0.1;
+
+      // Zoom step size (Z axis)
       const ZOOM_STEP = 0.1;
       let centerPosition = { x: 0, y: 0.5, z: 0 };
-
-      // Initialize animation controller
-      let animController = null;
 
       function moveModel(dx, dy) {
         if (!modelEntity) return;
         const pos = modelEntity.getAttribute('position');
+        // Y is up in A-Frame, X is left/right
         modelEntity.setAttribute('position', {
           x: pos.x + dx,
           y: pos.y + dy,
@@ -637,48 +297,20 @@
         modelEntity.setAttribute('position', centerPosition);
       }
 
-      // Bind movement buttons
       if (btnUp) btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
       if (btnDown) btnDown.addEventListener('click', () => moveModel(0, -MOVE_STEP));
       if (btnLeft) btnLeft.addEventListener('click', () => moveModel(-MOVE_STEP, 0));
       if (btnRight) btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
       if (btnCenter) btnCenter.addEventListener('click', centerModel);
 
-      // Bind zoom buttons
-      if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP));
-      if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP));
+      if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
+      if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
 
-      // Bind animation controls
-      if (animSelect) {
-        animSelect.addEventListener('change', (e) => {
-          if (animController && e.target.value) {
-            animController.playAnimation(e.target.value);
-          }
-        });
-      }
-      if (btnPlay) btnPlay.addEventListener('click', () => {
-        if (animController) {
-          if (animController.animationMixer && animController.animationMixer.timeScale === 0) {
-            animController.resumeAnimation();
-          } else if (!animController.currentAction) {
-            animController.playFirstAnimation();
-          }
-        }
-      });
-      if (btnPause) btnPause.addEventListener('click', () => {
-        if (animController) animController.pauseAnimation();
-      });
-      if (btnStop) btnStop.addEventListener('click', () => {
-        if (animController) animController.stopAnimation();
-      });
-
-      // Touch gesture support
+      // Touch gesture support for model rotation (orbit) and zoom
       let lastTouch = null;
       let lastDistance = null;
       let lastRotation = null;
-      let lastAngle = null;
       const scene = document.querySelector('a-scene');
-      
       if (!scene || !modelEntity || !marker) {
         console.error('Required AR elements are missing.');
         return;
@@ -688,6 +320,7 @@
         return { x: touch.clientX, y: touch.clientY };
       }
 
+      let lastAngle = null;
       scene.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
           lastTouch = getTouchPos(e.touches[0]);
@@ -707,6 +340,7 @@
           const newTouch = getTouchPos(e.touches[0]);
           const dx = newTouch.x - lastTouch.x;
           const dy = newTouch.y - lastTouch.y;
+          // Horizontal drag rotates around Y, vertical drag around X.
           modelEntity.setAttribute('rotation', {
             x: lastRotation.x - dy * 0.3,
             y: lastRotation.y + dx * 0.3,
@@ -718,10 +352,11 @@
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const newDistance = Math.sqrt(dx * dx + dy * dy);
-          const dz = (lastDistance - newDistance) / 200;
+          const dz = (lastDistance - newDistance) / 200; // scale factor for zoom
           zoomModel(dz);
+          // Z rotation (two-finger rotate)
           const newAngle = Math.atan2(dy, dx);
-          const dAngle = (newAngle - lastAngle) * (180 / Math.PI);
+          const dAngle = (newAngle - lastAngle) * (180 / Math.PI); // radians to degrees
           modelEntity.setAttribute('rotation', {
             x: lastRotation.x,
             y: lastRotation.y,
@@ -742,7 +377,6 @@
         }
       });
 
-      // Check for model URL
       if (!modelUrl) {
         console.warn('❗ No model URL provided in the query string');
         instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
@@ -756,110 +390,47 @@
       // Load the model
       modelEntity.setAttribute('gltf-model', modelUrl);
 
-      // Wait for model to load, then set up animation
-      modelEntity.addEventListener('model-loaded', (e) => {
+      // let billboardEnabled = true;
+      // let billboardFrameHandler = null;
+      // const toggleBillboardBtn = document.getElementById('toggle-billboard');
+
+      modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded in AR');
-        
-        // Initialize animation controller after model loads
-        animController = new AnimationController(modelEntity);
-        
-        // Get the underlying Three.js object to access animations
-        const modelObj = modelEntity.object3D;
-        
-        // Use GLTF loader result to get animations
-        // A-Frame stores the loaded GLTF in the component
-        const gltfComponent = modelEntity.components['gltf-model'];
-        if (gltfComponent && gltfComponent.getObject3D) {
-          const mesh = gltfComponent.getObject3D('mesh');
-          if (mesh) {
-            // Check for animations in the model
-            // The actual animations are usually in the parent or needs GLTF access
-          }
-        }
-        
-        // Alternative: Listen for the underlying Three.js GLTF to load
-        // A-Frame's gltf-model component emits 'object3dset' when ready
-        modelEntity.addEventListener('object3dset', () => {
-          const modelObj = modelEntity.object3D;
-          console.log('🔍 Model object3D set, checking for animations...');
-          
-          // Traverse to find animations
-          const animations = [];
-          modelObj.traverse((child) => {
-            if (child.animations && child.animations.length > 0) {
-              child.animations.forEach(clip => {
-                if (!animations.find(a => a.name === clip.name)) {
-                  animations.push(clip);
-                }
-              });
-            }
-          });
-          
-          // Create a mock GLTF object with animations for the controller
-          if (animations.length > 0) {
-            console.log('🎬 Found animations in model:', animations.map(a => a.name));
-            animController.onModelLoaded({ animations });
-          } else {
-            console.log('⚠️ No animations found in model');
-          }
-        });
-        
-        // Also try to get animations directly from A-Frame's GLTF loader
-        setTimeout(() => {
-          const modelObj = modelEntity.object3D;
-          if (modelObj) {
-            let foundAnimations = [];
-            
-            // Check if A-Frame has cached the GLTF
-            const gltf = modelEntity.getAttribute('gltf-model');
-            if (gltf && gltf.animations) {
-              foundAnimations = gltf.animations;
-            }
-            
-            // Try to find mixer which would have animations
-            modelObj.traverse((child) => {
-              if (child.mixer && child.mixer._actions) {
-                child.mixer._actions.forEach(action => {
-                  if (action._clip && !foundAnimations.find(a => a.name === action._clip.name)) {
-                    foundAnimations.push(action._clip);
-                  }
-                });
-              }
-            });
-            
-            if (foundAnimations.length > 0) {
-              console.log('🎬 Found animations via A-Frame:', foundAnimations.map(a => a.name));
-              animController.onModelLoaded({ animations: foundAnimations });
-            }
-          }
-        }, 1000);
-        
         modelEntity.setAttribute('visible', 'false');
         instructions.textContent = '📸 Point your camera at the Blockzie marker';
+
       });
 
+   
       modelEntity.addEventListener('model-error', (e) => {
         console.error('❌ Error loading model:', e.detail);
         instructions.textContent = '⚠️ Failed to load model.';
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
-      // Marker tracking
+      // marker.addEventListener('markerFound', () => {
+      //   console.log('📍 Marker found');
+      // });
+
+      // marker.addEventListener('markerLost', () => {
+      //   console.log('🚫 Marker lost');
+      // });
+     
       let placed = false;
       const cameraEl = document.querySelector('[camera]');
       const cameraObj = cameraEl ? cameraEl.object3D : null;
-      
       if (!cameraObj) {
         console.error('Camera object not available.');
         return;
       }
 
       marker.addEventListener('markerFound', () => {
-        if (placed) return;
+
+  if (placed) return;
 
         const modelObj = modelEntity.object3D;
 
-        // Attach to camera so it stays visible without pattern
+        // Attach once to camera so it stays visible without pattern.
         cameraObj.add(modelObj);
         modelEntity.setAttribute('position', '0 -0.10 -2.4');
         modelEntity.setAttribute('scale', '0.18 0.18 0.18');
@@ -867,13 +438,18 @@
         modelEntity.setAttribute('visible', 'true');
         centerPosition = { x: 0, y: -0.10, z: -2.4 };
 
-        // Detach from marker
+  // ⭐ detach model from marker
         marker.object3D.visible = false;
 
         placed = true;
         instructions.textContent = 'Model placed. Pattern no longer required until restart.';
-      });
+});
     });
+
+    
   </script>
+
+
 </body>
 </html>
+
