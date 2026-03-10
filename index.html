@@ -238,7 +238,7 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
-      console.log('?? DOM fully loaded, initializing AR scene...');
+      console.log('📄 DOM fully loaded, initializing AR scene...');
 
       const params = new URLSearchParams(window.location.search);
       const modelUrl = params.get('url');
@@ -394,20 +394,22 @@
       });
 
       if (!modelUrl) {
-        console.warn('? No model URL provided in the query string');
-        instructions.textContent = '?? No model URL provided. Add ?url=yourModel.glb to the link.';
+        console.warn('❗ No model URL provided in the query string');
+        instructions.textContent = '⚠️ No model URL provided. Add ?url=yourModel.glb to the link.';
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
         return;
       }
 
-      console.log('?? Loading Model URL:', modelUrl);
-      instructions.textContent = projectUrl ? '? Loading project + model...' : '? Loading 3D model...';
+      console.log('🌐 Loading Model URL:', modelUrl);
+      instructions.textContent = projectUrl ? '⏳ Loading project + model...' : '⏳ Loading 3D model...';
 
       modelEntity.setAttribute('gltf-model', modelUrl);
 
       let vm = null;
       let vmReady = false;
       let vmStarted = false;
+      let markerReady = false;
+      let modelReady = false;
 
       async function initVM() {
         if (!projectUrl || !window.VirtualMachine) return;
@@ -432,19 +434,20 @@
           vm.runtime.threeEditor = null;
 
           vmReady = true;
-          console.log('? VM loaded project');
+          console.log('✅ VM loaded project');
+          startVMIfReady();
         } catch (err) {
-          console.error('? VM load failed:', err);
-          instructions.textContent = '?? Failed to load block program.';
+          console.error('❌ VM load failed:', err);
+          instructions.textContent = '⚠️ Failed to load block program.';
           instructions.style.background = 'rgba(255, 0, 0, 0.6)';
         }
       }
 
       function startVMIfReady() {
-        if (vmReady && !vmStarted) {
+        if (vmReady && markerReady && modelReady && !vmStarted) {
           vmStarted = true;
           vm.greenFlag();
-          console.log('? VM green flag started');
+          console.log('✅ VM green flag started');
         }
       }
 
@@ -465,9 +468,9 @@
       requestAnimationFrame(physicsTick);
 
       modelEntity.addEventListener('model-loaded', () => {
-        console.log('? Model successfully loaded in AR');
+        console.log('✅ Model successfully loaded in AR');
         modelEntity.setAttribute('visible', 'true');
-        instructions.textContent = '?? Point your camera at the Blockzie marker';
+        instructions.textContent = '📸 Point your camera at the Blockzie marker';
 
         const root =
           modelEntity.getObject3D('mesh') ||
@@ -478,16 +481,18 @@
         }
 
         if (modelEntity.object3D && modelEntity.object3D.animations && modelEntity.object3D.animations.length > 0) {
-          console.log('?? Model has animations, adding animation-mixer');
+          console.log('🎬 Model has animations, adding animation-mixer');
           modelEntity.setAttribute('animation-mixer', 'clip: *; loop: repeat');
         }
 
+        modelReady = true;
+        startVMIfReady();
         startSpin();
       });
 
       modelEntity.addEventListener('model-error', (e) => {
-        console.error('? Error loading model:', e.detail);
-        instructions.textContent = '?? Failed to load model.';
+        console.error('❌ Error loading model:', e.detail);
+        instructions.textContent = '⚠️ Failed to load model.';
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
@@ -514,6 +519,7 @@
         marker.object3D.visible = false;
 
         placed = true;
+        markerReady = true;
         instructions.textContent = 'Model placed. Pattern no longer required until restart.';
 
         startVMIfReady();
