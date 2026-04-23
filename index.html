@@ -198,6 +198,25 @@
       font-size: 13px;
       padding: 10px 12px;
     }
+    #viewport-snapshot {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 0;
+      display: none;
+      pointer-events: none;
+    }
+    body.editor-viewport-mode.has-viewport-snapshot a-scene {
+      background: transparent !important;
+    }
+    body.editor-viewport-mode.has-viewport-snapshot #viewport-snapshot {
+      display: block;
+    }
+    body.editor-viewport-mode.has-viewport-snapshot #controls-wrapper {
+      display: none;
+    }
     @media (max-width: 600px) {
       .glass-controls {
         padding: 10px;
@@ -226,6 +245,7 @@
   </style>
 </head>
 <body>
+  <img id="viewport-snapshot" alt="Editor viewport preview">
   <div id="instructions">Loading AR Viewer...</div>
   <button id="mode-toggle" type="button">Editor View</button>
   <div id="controls-wrapper" class="glass-controls new-controls-layout">
@@ -272,9 +292,17 @@
   <script>
     const initialParams = new URLSearchParams(window.location.search);
     const isEditorViewportMode = initialParams.get('view') === 'editor' || initialParams.get('mode') === 'viewport';
+    const viewportSnapshotUrl = initialParams.get('viewportBg') || '';
 
     if (isEditorViewportMode) {
       document.body.classList.add('editor-viewport-mode');
+      if (viewportSnapshotUrl) {
+        const viewportSnapshot = document.getElementById('viewport-snapshot');
+        if (viewportSnapshot) {
+          viewportSnapshot.src = viewportSnapshotUrl;
+          document.body.classList.add('has-viewport-snapshot');
+        }
+      }
       const sceneEl = document.getElementById('scene');
       const markerEl = document.getElementById('custom-marker');
       const modelEl = document.getElementById('model');
@@ -379,6 +407,7 @@
 
       function addEditorViewportHelpers() {
         if (!viewportMode || !scene || scene.dataset.editorHelpersReady === 'true') return;
+        if (viewportSnapshotUrl) return;
         const THREE = window.AFRAME && window.AFRAME.THREE;
         if (!THREE || !scene.object3D) return;
 
@@ -402,6 +431,10 @@
 
       function frameModelInEditorViewport() {
         if (!viewportMode || !modelEntity || !modelEntity.object3D) return;
+        if (viewportSnapshotUrl) {
+          modelEntity.object3D.visible = false;
+          return;
+        }
         const THREE = window.AFRAME && window.AFRAME.THREE;
         if (!THREE) return;
 
@@ -619,11 +652,11 @@
 
       modelEntity.addEventListener('model-loaded', () => {
         console.log('✅ Model successfully loaded');
-        modelEntity.setAttribute('visible', viewportMode ? 'true' : 'false');
+        modelEntity.setAttribute('visible', viewportMode && !viewportSnapshotUrl ? 'true' : 'false');
         modelEntity.setAttribute('animation-mixer', 'clip: *; loop: repeat');
         frameModelInEditorViewport();
         instructions.textContent = viewportMode
-          ? 'Editor viewport. Use touch to rotate and buttons to move.'
+          ? (viewportSnapshotUrl ? 'Editor viewport preview.' : 'Editor viewport. Use touch to rotate and buttons to move.')
           : '📸 Point your camera at the Blockzie marker';
 
       });
