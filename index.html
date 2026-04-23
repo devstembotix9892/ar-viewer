@@ -7,7 +7,6 @@
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
-  <script src="./blockzie-vm.js"></script>
 
   <style>
     :root {
@@ -65,6 +64,7 @@
       flex-direction: row;
       align-items: center;
       gap: var(--controls-gap);
+      /* background: rgba(255,255,255,0.10); */
       border-radius: 22px;
       box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
       padding: 9px 5px;
@@ -171,6 +171,21 @@
       box-shadow: 0 6px 18px #007bff44;
       transform: scale(1.08);
     }
+    #mode-toggle {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      right: 12px;
+      z-index: 35;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+    }
     @media (max-width: 600px) {
       .glass-controls {
         padding: 10px;
@@ -200,6 +215,7 @@
 </head>
 <body>
   <div id="instructions">Loading AR Viewer...</div>
+  <button id="mode-toggle" type="button">Editor View</button>
   <div id="controls-wrapper" class="glass-controls new-controls-layout">
     <div class="side-zoom-btn">
       <button id="btn-zoom-in" class="glass-btn round-btn zoom-side-btn" title="Zoom In">+</button>
@@ -219,15 +235,20 @@
   </div>
   
 <a-scene id="scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <!-- <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;"> -->
     <a-assets id="assets"></a-assets>
-    <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
-      <a-entity id="model"
-                position="0 0.10 0"
-                scale="0.25 0.18 0.18"
-                rotation="0 90 0"
-                visible="true"
-                animation-mixer="clip: *; loop: repeat; timeScale: 1">
-      </a-entity>
+
+    <!-- <a-marker preset="hiro" id="hiro-marker"> -->
+      <a-marker type="pattern" url="./Blockzie-Pattern-img.patt" id="custom-marker">
+<a-entity id="model"
+          position="0 0.10 0"
+          animation-mixer="clip: *; loop: repeat"
+          scale="0.25 0.18 0.18"
+          rotation="0 90 0"
+           visible="false">
+</a-entity>
+ <!-- animation="property: rotation; to: -90 360 0; loop: true; dur: 8000" -->
+        
     </a-marker>
 
     <a-entity camera></a-entity>
@@ -237,50 +258,194 @@
   </a-scene>
 
   <script>
+    const initialParams = new URLSearchParams(window.location.search);
+    const isEditorViewportMode = initialParams.get('view') === 'editor' || initialParams.get('mode') === 'viewport';
+
+    if (isEditorViewportMode) {
+      const sceneEl = document.getElementById('scene');
+      const markerEl = document.getElementById('custom-marker');
+      const modelEl = document.getElementById('model');
+      const cameraEl = document.querySelector('[camera]');
+
+      if (sceneEl) {
+        sceneEl.removeAttribute('arjs');
+        sceneEl.setAttribute('background', 'color: #8ec7ee');
+        sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
+
+        const sky = document.createElement('a-sky');
+        sky.setAttribute('color', '#8ec7ee');
+        sceneEl.appendChild(sky);
+
+        const grid = document.createElement('a-entity');
+        grid.setAttribute('geometry', 'primitive: plane; width: 30; height: 30; segmentsWidth: 30; segmentsHeight: 30');
+        grid.setAttribute('material', 'color: #4d4d4d; wireframe: true; transparent: true; opacity: 0.55');
+        grid.setAttribute('rotation', '-90 0 0');
+        grid.setAttribute('position', '0 -0.01 -4');
+        sceneEl.appendChild(grid);
+      }
+
+      if (modelEl && sceneEl) {
+        modelEl.setAttribute('position', '0 0 -3');
+        modelEl.setAttribute('scale', '0.45 0.45 0.45');
+        modelEl.setAttribute('rotation', '0 0 0');
+        modelEl.setAttribute('visible', 'true');
+        sceneEl.appendChild(modelEl);
+      }
+
+      if (markerEl) markerEl.remove();
+
+      if (cameraEl) {
+        cameraEl.setAttribute('position', '0 1.35 2.7');
+        cameraEl.setAttribute('look-controls', 'enabled: true');
+        cameraEl.setAttribute('wasd-controls', 'enabled: false');
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       console.log('📄 DOM fully loaded, initializing AR scene...');
-
+      
       const params = new URLSearchParams(window.location.search);
       const modelUrl = params.get('url');
-      const projectUrl = params.get('project');
-      const objectName = params.get('object') || 'model';
-
-      const spinEnabled = params.get('spin') === '1' && !projectUrl;
-      const spinAxis = (params.get('spinAxis') || 'y').toLowerCase();
-      const spinSpeed = Number(params.get('spinSpeed') || 45);
-
+      const viewportMode = params.get('view') === 'editor' || params.get('mode') === 'viewport';
+      const isLive = params.get('live') === '1';
+      const liveSessionId = params.get('session');
+      const liveWsUrl = params.get('ws');
       const modelEntity = document.getElementById('model');
+      // const marker = document.getElementById('hiro-marker');
       const marker = document.getElementById('custom-marker');
-      const instructions = document.getElementById('instructions');
 
+      const instructions = document.getElementById('instructions');
+      const modeToggle = document.getElementById('mode-toggle');
+      let liveSocket = null;
+      const objectByUuid = new Map();
+      const objectByNameType = new Map();
+
+      if (modeToggle) {
+        modeToggle.textContent = viewportMode ? 'Open Camera AR' : 'Editor View';
+        modeToggle.addEventListener('click', () => {
+          const nextParams = new URLSearchParams(window.location.search);
+          nextParams.set('view', viewportMode ? 'ar' : 'editor');
+          window.location.search = nextParams.toString();
+        });
+      }
+
+      // Movement controls
       const btnUp = document.getElementById('btn-up');
       const btnDown = document.getElementById('btn-down');
       const btnLeft = document.getElementById('btn-left');
       const btnRight = document.getElementById('btn-right');
       const btnCenter = document.getElementById('btn-center');
 
+      // Zoom controls
       const btnZoomIn = document.getElementById('btn-zoom-in');
       const btnZoomOut = document.getElementById('btn-zoom-out');
 
+      // Move step size
       const MOVE_STEP = 0.1;
+
+      // Zoom step size (Z axis)
       const ZOOM_STEP = 0.1;
       let centerPosition = { x: 0, y: 0.5, z: 0 };
 
       function moveModel(dx, dy) {
         if (!modelEntity) return;
         const pos = modelEntity.getAttribute('position');
-        modelEntity.setAttribute('position', { x: pos.x + dx, y: pos.y + dy, z: pos.z });
+        // Y is up in A-Frame, X is left/right
+        modelEntity.setAttribute('position', {
+          x: pos.x + dx,
+          y: pos.y + dy,
+          z: pos.z
+        });
       }
 
       function zoomModel(dz) {
         if (!modelEntity) return;
         const pos = modelEntity.getAttribute('position');
-        modelEntity.setAttribute('position', { x: pos.x, y: pos.y, z: pos.z + dz });
+        modelEntity.setAttribute('position', {
+          x: pos.x,
+          y: pos.y,
+          z: pos.z + dz
+        });
       }
 
       function centerModel() {
         if (!modelEntity) return;
         modelEntity.setAttribute('position', centerPosition);
+      }
+
+      function buildLiveIndex() {
+        objectByUuid.clear();
+        objectByNameType.clear();
+
+        if (!modelEntity || !modelEntity.object3D) return;
+
+        modelEntity.object3D.traverse((obj) => {
+          if (!obj || !obj.isObject3D) return;
+          objectByUuid.set(obj.uuid, obj);
+
+          const key = `${obj.name || ''}::${obj.type || ''}`;
+          if (!objectByNameType.has(key)) objectByNameType.set(key, []);
+          objectByNameType.get(key).push(obj);
+        });
+      }
+
+      function applyLiveFrame(objects) {
+        if (!Array.isArray(objects)) return;
+
+        objects.forEach((item) => {
+          let target = objectByUuid.get(item.id);
+          if (!target && item.n) {
+            const key = `${item.n}::${item.t || ''}`;
+            const matches = objectByNameType.get(key);
+            if (matches && matches.length === 1) target = matches[0];
+          }
+
+          if (!target) return;
+
+          if (item.p && item.p.length === 3) target.position.set(item.p[0], item.p[1], item.p[2]);
+          if (item.q && item.q.length === 4) target.quaternion.set(item.q[0], item.q[1], item.q[2], item.q[3]);
+          if (item.s && item.s.length === 3) target.scale.set(item.s[0], item.s[1], item.s[2]);
+          if (typeof item.v === 'boolean') target.visible = item.v;
+        });
+      }
+
+      function connectLiveStreamIfNeeded() {
+        if (!isLive || !liveSessionId || !liveWsUrl) return;
+        if (typeof WebSocket === 'undefined') return;
+        if (liveSocket && (liveSocket.readyState === WebSocket.OPEN || liveSocket.readyState === WebSocket.CONNECTING)) return;
+
+        try {
+          liveSocket = new WebSocket(liveWsUrl);
+
+          liveSocket.addEventListener('open', () => {
+            liveSocket.send(JSON.stringify({
+              type: 'join',
+              role: 'receiver',
+              sessionId: liveSessionId,
+              ts: Date.now()
+            }));
+            instructions.textContent = 'Live AR connected';
+          });
+
+          liveSocket.addEventListener('message', (event) => {
+            let msg = null;
+            try {
+              msg = JSON.parse(event.data);
+            } catch (err) {
+              return;
+            }
+
+            if (!msg || msg.sessionId !== liveSessionId) return;
+            if (msg.type !== 'frame' && msg.type !== 'snapshot') return;
+            applyLiveFrame(msg.objects);
+          });
+
+          liveSocket.addEventListener('close', () => {
+            instructions.textContent = 'Live AR disconnected';
+          });
+        } catch (err) {
+          console.error('Live WS failed:', err);
+        }
       }
 
       if (btnUp) btnUp.addEventListener('click', () => moveModel(0, MOVE_STEP));
@@ -289,44 +454,15 @@
       if (btnRight) btnRight.addEventListener('click', () => moveModel(MOVE_STEP, 0));
       if (btnCenter) btnCenter.addEventListener('click', centerModel);
 
-      if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP));
-      if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP));
+      if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoomModel(-ZOOM_STEP)); // Move model closer
+      if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoomModel(ZOOM_STEP)); // Move model farther
 
-      let spinPaused = false;
-      let lastSpinTs = 0;
-      let spinRaf = null;
-
-      function getAxisKey() {
-        if (spinAxis === 'x') return 'x';
-        if (spinAxis === 'z') return 'z';
-        return 'y';
-      }
-
-      function spinStep(ts) {
-        if (!lastSpinTs) lastSpinTs = ts;
-        const dt = (ts - lastSpinTs) / 1000;
-        lastSpinTs = ts;
-
-        if (spinEnabled && !spinPaused && modelEntity) {
-          const rot = modelEntity.getAttribute('rotation');
-          const axisKey = getAxisKey();
-          rot[axisKey] = (rot[axisKey] + spinSpeed * dt) % 360;
-          modelEntity.setAttribute('rotation', rot);
-        }
-        spinRaf = requestAnimationFrame(spinStep);
-      }
-
-      function startSpin() {
-        if (spinEnabled && !spinRaf) {
-          spinRaf = requestAnimationFrame(spinStep);
-        }
-      }
-
+      // Touch gesture support for model rotation (orbit) and zoom
       let lastTouch = null;
       let lastDistance = null;
       let lastRotation = null;
       const scene = document.querySelector('a-scene');
-      if (!scene || !modelEntity || !marker) {
+      if (!scene || !modelEntity || (!viewportMode && !marker)) {
         console.error('Required AR elements are missing.');
         return;
       }
@@ -337,7 +473,6 @@
 
       let lastAngle = null;
       scene.addEventListener('touchstart', (e) => {
-        spinPaused = true;
         if (e.touches.length === 1) {
           lastTouch = getTouchPos(e.touches[0]);
           lastRotation = modelEntity.getAttribute('rotation');
@@ -356,6 +491,7 @@
           const newTouch = getTouchPos(e.touches[0]);
           const dx = newTouch.x - lastTouch.x;
           const dy = newTouch.y - lastTouch.y;
+          // Horizontal drag rotates around Y, vertical drag around X.
           modelEntity.setAttribute('rotation', {
             x: lastRotation.x - dy * 0.3,
             y: lastRotation.y + dx * 0.3,
@@ -367,11 +503,11 @@
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const newDistance = Math.sqrt(dx * dx + dy * dy);
-          const dz = (lastDistance - newDistance) / 200;
+          const dz = (lastDistance - newDistance) / 200; // scale factor for zoom
           zoomModel(dz);
-
+          // Z rotation (two-finger rotate)
           const newAngle = Math.atan2(dy, dx);
-          const dAngle = (newAngle - lastAngle) * (180 / Math.PI);
+          const dAngle = (newAngle - lastAngle) * (180 / Math.PI); // radians to degrees
           modelEntity.setAttribute('rotation', {
             x: lastRotation.x,
             y: lastRotation.y,
@@ -389,7 +525,6 @@
           lastDistance = null;
           lastRotation = null;
           lastAngle = null;
-          spinPaused = false;
         }
       });
 
@@ -401,93 +536,29 @@
       }
 
       console.log('🌐 Loading Model URL:', modelUrl);
-      instructions.textContent = projectUrl ? '⏳ Loading project + model...' : '⏳ Loading 3D model...';
+      instructions.textContent = '⏳ Loading 3D model...';
 
+      // Load the model
       modelEntity.setAttribute('gltf-model', modelUrl);
 
-      let vm = null;
-      let vmReady = false;
-      let vmStarted = false;
-      let markerReady = false;
-      let modelReady = false;
-
-      async function initVM() {
-        if (!projectUrl || !window.VirtualMachine) return;
-        try {
-          const VM = window.VirtualMachine;
-          vm = new VM();
-          window.vm = vm;
-
-          if (vm.extensionManager && 'workerURL' in vm.extensionManager) {
-            vm.extensionManager.workerURL = './extension-worker.js';
-          }
-
-          vm.start();
-
-          const resp = await fetch(projectUrl);
-          const buf = await resp.arrayBuffer();
-          await vm.loadProject(buf);
-
-          vm.runtime.threePlayer = vm.runtime.threePlayer || {};
-          vm.runtime.threePlayer.scene = scene.object3D;
-          vm.runtime.threeScene = scene.object3D;
-          vm.runtime.threeEditor = null;
-
-          vmReady = true;
-          console.log('✅ VM loaded project');
-          startVMIfReady();
-        } catch (err) {
-          console.error('❌ VM load failed:', err);
-          instructions.textContent = '⚠️ Failed to load block program.';
-          instructions.style.background = 'rgba(255, 0, 0, 0.6)';
-        }
-      }
-
-      function startVMIfReady() {
-        if (vmReady && markerReady && modelReady && !vmStarted) {
-          vmStarted = true;
-          vm.greenFlag();
-          console.log('✅ VM green flag started');
-        }
-      }
-
-      initVM();
-
-      let lastPhys = performance.now();
-      function physicsTick(now) {
-        if (vm && vm.runtime && vm.runtime.threePlayer && vm.runtime.threePlayer.scene) {
-          const sceneObj = vm.runtime.threePlayer.scene;
-          if (sceneObj.physicsWorld) {
-            const dt = (now - lastPhys) / 1000;
-            lastPhys = now;
-            sceneObj.physicsWorld.step(dt);
-          }
-        }
-        requestAnimationFrame(physicsTick);
-      }
-      requestAnimationFrame(physicsTick);
+      // let billboardEnabled = true;
+      // let billboardFrameHandler = null;
+      // const toggleBillboardBtn = document.getElementById('toggle-billboard');
 
       modelEntity.addEventListener('model-loaded', () => {
-        console.log('✅ Model successfully loaded in AR');
-        modelEntity.setAttribute('visible', 'true');
-        instructions.textContent = '📸 Point your camera at the Blockzie marker';
+        console.log('✅ Model successfully loaded');
+        modelEntity.setAttribute('visible', viewportMode ? 'true' : 'false');
+        modelEntity.setAttribute('animation-mixer', 'clip: *; loop: repeat');
+        instructions.textContent = viewportMode
+          ? 'Editor viewport preview. Use touch to rotate and buttons to move.'
+          : '📸 Point your camera at the Blockzie marker';
 
-        const root =
-          modelEntity.getObject3D('mesh') ||
-          modelEntity.getObject3D('model') ||
-          modelEntity.object3D;
-        if (root) {
-          root.name = objectName;
-        }
+      });
 
-        if (modelEntity.object3D && modelEntity.object3D.animations && modelEntity.object3D.animations.length > 0) {
-          console.log('🎬 Model has animations, adding animation-mixer');
-          modelEntity.setAttribute('animation-mixer', 'clip: *; loop: repeat');
-        }
-
-        modelReady = true;
-        startVMIfReady();
-        startSpin();
+   
+      modelEntity.addEventListener('model-loaded', () => {
+        buildLiveIndex();
+        connectLiveStreamIfNeeded();
       });
 
       modelEntity.addEventListener('model-error', (e) => {
@@ -496,6 +567,14 @@
         instructions.style.background = 'rgba(255, 0, 0, 0.6)';
       });
 
+      // marker.addEventListener('markerFound', () => {
+      //   console.log('📍 Marker found');
+      // });
+
+      // marker.addEventListener('markerLost', () => {
+      //   console.log('🚫 Marker lost');
+      // });
+     
       let placed = false;
       const cameraEl = document.querySelector('[camera]');
       const cameraObj = cameraEl ? cameraEl.object3D : null;
@@ -504,11 +583,18 @@
         return;
       }
 
+      if (viewportMode) {
+        centerPosition = { x: 0, y: 0, z: -3 };
+        return;
+      }
+
       marker.addEventListener('markerFound', () => {
-        if (placed) return;
+
+  if (placed) return;
 
         const modelObj = modelEntity.object3D;
 
+        // Attach once to camera so it stays visible without pattern.
         cameraObj.add(modelObj);
         modelEntity.setAttribute('position', '0 -0.10 -2.4');
         modelEntity.setAttribute('scale', '0.18 0.18 0.18');
@@ -516,15 +602,18 @@
         modelEntity.setAttribute('visible', 'true');
         centerPosition = { x: 0, y: -0.10, z: -2.4 };
 
+  // ⭐ detach model from marker
         marker.object3D.visible = false;
 
         placed = true;
-        markerReady = true;
         instructions.textContent = 'Model placed. Pattern no longer required until restart.';
-
-        startVMIfReady();
-      });
+});
     });
+
+    
   </script>
+
+
 </body>
 </html>
+
