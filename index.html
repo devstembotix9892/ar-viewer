@@ -186,6 +186,18 @@
       letter-spacing: 0.02em;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
     }
+    body.editor-viewport-mode {
+      background:
+        linear-gradient(180deg, rgba(70, 156, 219, 0.82) 0%, rgba(238, 246, 255, 0.78) 54%, rgba(255, 202, 91, 0.72) 100%);
+    }
+    body.editor-viewport-mode #instructions {
+      left: 12px;
+      right: auto;
+      transform: none;
+      max-width: calc(100% - 150px);
+      font-size: 13px;
+      padding: 10px 12px;
+    }
     @media (max-width: 600px) {
       .glass-controls {
         padding: 10px;
@@ -262,6 +274,7 @@
     const isEditorViewportMode = initialParams.get('view') === 'editor' || initialParams.get('mode') === 'viewport';
 
     if (isEditorViewportMode) {
+      document.body.classList.add('editor-viewport-mode');
       const sceneEl = document.getElementById('scene');
       const markerEl = document.getElementById('custom-marker');
       const modelEl = document.getElementById('model');
@@ -269,24 +282,14 @@
 
       if (sceneEl) {
         sceneEl.removeAttribute('arjs');
-        sceneEl.setAttribute('background', 'color: #8ec7ee');
+        sceneEl.setAttribute('background', 'color: transparent');
+        sceneEl.setAttribute('renderer', 'alpha: true; antialias: true');
         sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
-
-        const sky = document.createElement('a-sky');
-        sky.setAttribute('color', '#8ec7ee');
-        sceneEl.appendChild(sky);
-
-        const grid = document.createElement('a-entity');
-        grid.setAttribute('geometry', 'primitive: plane; width: 30; height: 30; segmentsWidth: 30; segmentsHeight: 30');
-        grid.setAttribute('material', 'color: #4d4d4d; wireframe: true; transparent: true; opacity: 0.55');
-        grid.setAttribute('rotation', '-90 0 0');
-        grid.setAttribute('position', '0 -0.01 -4');
-        sceneEl.appendChild(grid);
       }
 
       if (modelEl && sceneEl) {
-        modelEl.setAttribute('position', '0 0 -3');
-        modelEl.setAttribute('scale', '0.45 0.45 0.45');
+        modelEl.setAttribute('position', '0 0 -4');
+        modelEl.setAttribute('scale', '1 1 1');
         modelEl.setAttribute('rotation', '0 0 0');
         modelEl.setAttribute('visible', 'true');
         sceneEl.appendChild(modelEl);
@@ -295,7 +298,8 @@
       if (markerEl) markerEl.remove();
 
       if (cameraEl) {
-        cameraEl.setAttribute('position', '0 1.35 2.7');
+        cameraEl.setAttribute('position', '0 2.2 4.8');
+        cameraEl.setAttribute('rotation', '-18 0 0');
         cameraEl.setAttribute('look-controls', 'enabled: true');
         cameraEl.setAttribute('wasd-controls', 'enabled: false');
       }
@@ -371,6 +375,66 @@
       function centerModel() {
         if (!modelEntity) return;
         modelEntity.setAttribute('position', centerPosition);
+      }
+
+      function addEditorViewportHelpers() {
+        if (!viewportMode || !scene || scene.dataset.editorHelpersReady === 'true') return;
+        const THREE = window.AFRAME && window.AFRAME.THREE;
+        if (!THREE || !scene.object3D) return;
+
+        const grid = new THREE.Group();
+        grid.name = 'BlockzieEditorViewportGrid';
+
+        const grid1 = new THREE.GridHelper(30, 30, 0x555555, 0x777777);
+        const grid2 = new THREE.GridHelper(30, 6, 0x333333, 0x555555);
+        grid1.position.z = -4;
+        grid2.position.z = -4;
+        grid.add(grid1);
+        grid.add(grid2);
+        scene.object3D.add(grid);
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x778899, 0.85);
+        hemiLight.name = 'BlockzieEditorViewportHemisphereLight';
+        scene.object3D.add(hemiLight);
+
+        scene.dataset.editorHelpersReady = 'true';
+      }
+
+      function frameModelInEditorViewport() {
+        if (!viewportMode || !modelEntity || !modelEntity.object3D) return;
+        const THREE = window.AFRAME && window.AFRAME.THREE;
+        if (!THREE) return;
+
+        const modelObject = modelEntity.object3D;
+        modelObject.updateMatrixWorld(true);
+
+        const box = new THREE.Box3().setFromObject(modelObject);
+        if (box.isEmpty()) return;
+
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+
+        const maxDimension = Math.max(size.x, size.y, size.z, 0.001);
+        const scale = Math.min(2.2 / maxDimension, 3.5);
+        const yOffset = -box.min.y * scale;
+
+        modelObject.scale.setScalar(scale);
+        modelObject.position.set(
+          -center.x * scale,
+          yOffset,
+          -4 - center.z * scale
+        );
+        modelObject.rotation.set(0, 0, 0);
+        modelObject.visible = true;
+        modelObject.updateMatrixWorld(true);
+
+        centerPosition = {
+          x: modelObject.position.x,
+          y: modelObject.position.y,
+          z: modelObject.position.z
+        };
       }
 
       function buildLiveIndex() {
@@ -467,6 +531,14 @@
         return;
       }
 
+      if (viewportMode) {
+        if (scene.hasLoaded) {
+          addEditorViewportHelpers();
+        } else {
+          scene.addEventListener('loaded', addEditorViewportHelpers, { once: true });
+        }
+      }
+
       function getTouchPos(touch) {
         return { x: touch.clientX, y: touch.clientY };
       }
@@ -549,8 +621,9 @@
         console.log('✅ Model successfully loaded');
         modelEntity.setAttribute('visible', viewportMode ? 'true' : 'false');
         modelEntity.setAttribute('animation-mixer', 'clip: *; loop: repeat');
+        frameModelInEditorViewport();
         instructions.textContent = viewportMode
-          ? 'Editor viewport preview. Use touch to rotate and buttons to move.'
+          ? 'Editor viewport. Use touch to rotate and buttons to move.'
           : '📸 Point your camera at the Blockzie marker';
 
       });
@@ -584,7 +657,7 @@
       }
 
       if (viewportMode) {
-        centerPosition = { x: 0, y: 0, z: -3 };
+        frameModelInEditorViewport();
         return;
       }
 
